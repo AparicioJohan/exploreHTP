@@ -4,6 +4,9 @@
 # `{autoextract}`
 
 <!-- badges: start -->
+
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
 ## Installation
@@ -11,7 +14,8 @@
 You can install the development version of `{autoextract}` like so:
 
 ``` r
-# FILL THIS IN! HOW CAN PEOPLE INSTALL YOUR DEV PACKAGE?
+# install.packages("devtools")
+devtools::install_github("AparicioJohan/autoextract")
 ```
 
 ## Run
@@ -24,32 +28,33 @@ autoextract::run_app()
 
 ## About
 
-You are reading the doc about version : 0.0.0.9000
+You are reading the doc about version : 0.0.1
 
 This README has been compiled on the
 
 ``` r
 Sys.time()
-#> [1] "2024-11-28 07:38:40 CST"
+#> [1] "2024-11-28 11:07:14 CST"
 ```
 
 Here are the tests results and package coverage:
 
 ``` r
 devtools::check(quiet = TRUE)
-#> ══ Documenting ═════════════════════════════════════════════════════════════════
-#> ℹ Installed roxygen2 version (7.3.2) doesn't match required (7.1.1)
-#> ✖ `check()` will not re-document this package
-#> ── R CMD check results ───────────────────────────── autoextract 0.0.0.9000 ────
-#> Duration: 17.1s
+#> ℹ Loading autoextract
+#> ── R CMD check results ────────────────────────────────── autoextract 0.0.1 ────
+#> Duration: 1m 42.5s
 #> 
 #> 0 errors ✔ | 0 warnings ✔ | 0 notes ✔
 ```
 
 ``` r
 covr::package_coverage()
-#> autoextract Coverage: 0.00%
+#> autoextract Coverage: 55.71%
 #> R/app_config.R: 0.00%
+#> R/app_server.R: 0.00%
 #> R/app_ui.R: 0.00%
+#> R/fct_helpers.R: 0.00%
 #> R/run_app.R: 0.00%
+#> R/mod_01_grid_resize.R: 76.47%
 ```

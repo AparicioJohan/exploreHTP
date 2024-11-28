@@ -211,7 +211,7 @@ mod_01_grid_resize_server <- function(id) {
       )
       if (!is.null(rasterData())) {
         map <- viewRGB(
-          x = as(rasterData(), "Raster"),
+          x = methods::as(rasterData(), "Raster"),
           layer.name = "base",
           r = 1,
           g = 2,
