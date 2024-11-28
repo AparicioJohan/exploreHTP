@@ -1,3 +1,3 @@
-# autoextract (development version)
+# autoextract 0.0.1
 
 * Initial CRAN submission.

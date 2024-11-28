@@ -1,6 +1,6 @@
 Package: autoextract
 Title: Shape Resizer
-Version: 0.0.0.9000
+Version: 0.0.1
 Authors@R: 
     person("Johan", "Aparicio", , "johanstevenapa@gmail.com", role = c("aut", "cre"))
 Description: Shiny App for Shape Resize.
@@ -13,6 +13,7 @@ Imports:
     golem,
     leaflet,
     mapview,
+    methods,
     raster,
     sf,
     shiny,
