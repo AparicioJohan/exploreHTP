@@ -6,4 +6,5 @@
 #' @noRd
 app_server <- function(input, output, session) {
   # Your application server logic
+  mod_01_grid_resize_server("01_grid_resize_1")
 }

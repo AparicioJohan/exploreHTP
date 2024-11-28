@@ -9,8 +9,14 @@ app_ui <- function(request) {
     # Leave this function for adding external resources
     golem_add_external_resources(),
     # Your application UI logic
-    fluidPage(
-      golem::golem_welcome_page() # Remove this line to start building your UI
+    # fluidPage(
+    page_fillable(
+      titlePanel("Rotate Simple Feature"),
+      class = "bslib-page-dashboard",
+      # use default Bootstrap styles
+      theme = bs_theme(preset = "bootstrap"),
+      # input_dark_mode(id = "col"),
+      mod_01_grid_resize_ui("01_grid_resize_1")
     )
   )
 }
