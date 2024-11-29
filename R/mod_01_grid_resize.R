@@ -89,7 +89,14 @@ mod_01_grid_resize_ui <- function(id) {
             ),
             column(
               width = 10,
-              leafletOutput(outputId = ns("map2"))
+              card(
+                full_screen = TRUE,
+                card_header("Interactive Map"),
+                card_body(
+                  class = "p-0",
+                  leafletOutput(outputId = ns("map2"))
+                )
+              )
             )
           )
         ),
@@ -111,7 +118,7 @@ mod_01_grid_resize_ui <- function(id) {
               )
             ),
             column(
-              width = 2,
+              width = 10,
               plotOutput(
                 outputId = ns("map"),
                 width = "1000px",
@@ -122,20 +129,7 @@ mod_01_grid_resize_ui <- function(id) {
         )
       )
     ),
-    hr(),
-    br(),
-    tags$footer(
-      strong("UW - Madison 2024"), # strong() = bold
-      align = "center",
-      style =
-        "position:fixed;
-         bottom:11.5px;
-         width: 20%;
-         height:20px;
-         color: black;
-         padding: 0px;
-         z-index: 100;"
-    )
+    br()
   )
 }
 
@@ -186,14 +180,20 @@ mod_01_grid_resize_server <- function(id) {
       req(simpleFeature())
       if (is.null(rasterData())) {
         plot(simpleFeature()$geom)
+        if (input$original) {
+          plot(simpleFeature()$geom, add = TRUE, col = "red")
+        }
+        if (input$new) {
+          plot(simpleFeature_R()$geom, add = TRUE, col = "blue")
+        }
       } else {
         plotRGB(rasterData())
-      }
-      if (input$original) {
-        plot(simpleFeature()$geom, add = TRUE, col = "red")
-      }
-      if (input$new) {
-        plot(simpleFeature_R()$geom, add = TRUE, col = "blue")
+        if (input$original) {
+          plot(simpleFeature()$geom, add = TRUE, col = "red")
+        }
+        if (input$new) {
+          plot(simpleFeature_R()$geom, add = TRUE, col = "blue")
+        }
       }
     })
 
@@ -227,7 +227,10 @@ mod_01_grid_resize_server <- function(id) {
     # Download Shape File
     output$download <- downloadHandler(
       filename = function() {
-        paste0("shapefile_", Sys.Date(), ".gpkg")
+        paste0(
+          "shapefile_width_", input$x,
+          "_length_" , input$y,
+          "_angle_" , input$angle, ".gpkg")
       },
       content = function(file) {
         st_write(simpleFeature_R(), file, quiet = TRUE)
