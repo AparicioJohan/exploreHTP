@@ -11,6 +11,7 @@ mod_01_grid_resize_ui <- function(id) {
   ns <- NS(id)
   tagList(
     fluidRow(
+      h2("Inputs"),
       column(
         width = 4,
         fileInput(
