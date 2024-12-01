@@ -43,7 +43,7 @@ app_ui <- function(request) {
       ),
       nav_panel(
         title = "Autoextract",
-        # mod_01_grid_resize_ui("01_grid_resize_1")
+        mod_02_auto_extract_ui("02_auto_extract_1")
       ),
       nav_panel(
         title = "flexFitR",
@@ -76,7 +76,9 @@ golem_add_external_resources <- function() {
     bundle_resources(
       path = app_sys("app/www"),
       app_title = "autoextract"
-    )
+    ),
+    shinytoastr::useToastr(),
+    waiter::useWaiter()
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert()
   )

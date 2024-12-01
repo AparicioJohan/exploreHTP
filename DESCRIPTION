@@ -10,16 +10,30 @@ BugReports: https://github.com/AparicioJohan/autoextract/issues
 Imports: 
     bslib,
     config,
+    data.table,
+    dplyr,
+    exactextractr,
+    FIELDimageR (>= 0.6.2),
+    fields,
+    ggplot2,
     golem,
     leaflet,
     mapview,
     methods,
     sf,
     shiny,
-    terra
+    shinyalert,
+    shinyFiles,
+    shinytoastr,
+    stars,
+    terra,
+    waiter
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.2
 Suggests: 
+    raster,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+Remotes: 
+    OpenDroneMap/FIELDimageR

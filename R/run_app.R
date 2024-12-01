@@ -12,6 +12,17 @@
 #' @import terra
 #' @import sf
 #' @import mapview
+#' @import shinyFiles
+#' @importFrom FIELDimageR fieldIndex fieldMask fieldHeight
+#' @importFrom dplyr mutate select mutate_all rename filter all_of
+#' @import stars
+#' @import exactextractr
+#' @import ggplot2
+#' @importFrom shinyalert shinyalert
+#' @importFrom utils write.csv
+#' @importFrom methods as
+#' @importFrom grDevices rgb
+#' @import waiter
 run_app <- function(
   onStart = NULL,
   options = list(launch.browser = TRUE),
