@@ -12,6 +12,7 @@ Imports:
     config,
     data.table,
     dplyr,
+    DT,
     exactextractr,
     FIELDimageR (>= 0.6.2),
     fields,
@@ -19,12 +20,12 @@ Imports:
     golem,
     leaflet,
     mapview,
-    methods,
     sf,
     shiny,
     shinyalert,
     shinyFiles,
     shinytoastr,
+    shinyWidgets,
     stars,
     terra,
     waiter
@@ -33,6 +34,7 @@ LazyData: true
 RoxygenNote: 7.3.2
 Suggests: 
     raster,
+    methods,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Remotes: 

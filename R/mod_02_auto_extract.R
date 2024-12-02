@@ -67,11 +67,19 @@ mod_02_auto_extract_ui <- function(id) {
             accept = c(".gpkg"),
             width = "80%"
           ),
+          actionButton(
+            inputId = ns("view_shape"),
+            label = "View",
+            icon = icon("eye"),
+            class = "btn-primary"
+          ),
+          br(),
+          br(),
           checkboxInput(
             inputId = ns("optionals"),
             label = "More Options?",
             value = FALSE,
-            width = "80%"
+            width = "100%"
           ),
           conditionalPanel(
             condition = "input.optionals == true",
@@ -127,10 +135,10 @@ mod_02_auto_extract_ui <- function(id) {
             icon = icon("magnifying-glass")
           ),
           # Submit button
-          actionButton(ns("submit"), "Submit"),
-          textOutput(ns("dirPathOut")),
-          textOutput(ns("action_result"))
-        )
+          actionButton(ns("submit"), "Submit", icon = icon("thumbs-up")),
+          textOutput(ns("dirPathOut"))
+        ),
+        column(width = 12, DTOutput(ns("data_table")))
       )
     )
   )
@@ -231,7 +239,7 @@ mod_02_auto_extract_server <- function(id) {
     # Progress
     w <- Waiter$new(
       html = HTML("<center> <div class='ball-loader'></div> </center>"),
-      color = transparent(0.3)
+      color = transparent(0.4)
     )
     update_progress <- function(current_step, total_steps) {
       w$update(
@@ -333,12 +341,14 @@ mod_02_auto_extract_server <- function(id) {
       ignoreInit = TRUE
     )
 
+    # Notification when finished
     observeEvent(results(), {
       if (!is.null(results())) {
         shinytoastr::toastr_info(
           title = "Outputs!",
           message = paste0(
-            "Your files were saved in here: \n \n", path_out()),
+            "Your files were saved in here: \n \n", path_out()
+          ),
           closeButton = TRUE,
           position = "bottom-right",
           showMethod = "slideDown",
@@ -347,7 +357,49 @@ mod_02_auto_extract_server <- function(id) {
       }
     })
 
+    # View Shape
+    output$map <- renderLeaflet({
+      req(plot_shape())
+      plot_shape <- plot_shape()
+      map <- mapview(
+        x = plot_shape,
+        alpha.regions = 0.5,
+        aplha = 1,
+        zcol = input$color_by
+      )
+      map@map
+    })
 
+    # Modal
+    observeEvent(input$view_shape, {
+      req(plot_shape())
+      showModal(modalDialog(
+        title = tagList(icon = icon("table-cells"), "View Shape"),
+        size = "l",
+        easyClose = TRUE,
+        shinyWidgets::pickerInput(
+          inputId = ns("color_by"),
+          label = "Select Column:",
+          choices = colnames(plot_shape()),
+          options = shinyWidgets::pickerOptions(
+            container = "body",
+            style = "btn-outline-secondary"
+          )
+        ),
+        leafletOutput(outputId = ns("map"))
+      ))
+    })
+
+    # Final Table
+    output$data_table <- renderDT({
+      req(results())
+      dt <- dplyr::mutate_if(results()$dt, is.numeric, round, 3)
+      datatable(
+        data = dt,
+        options = list(pageLength = 5, autoWidth = TRUE),
+        filter = "top"
+      )
+    })
   })
 }
 

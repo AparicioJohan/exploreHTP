@@ -301,7 +301,7 @@ crop_grid <- function(mosaic,
     }
     file_name <- paste0("ID_", plot_shape[[plot_id]][i], ".tif")
     file_path <- file.path(output_dir, file_name)
-    plot_raster <- as(plot_raster, "Raster")
+    plot_raster <- methods::as(plot_raster, "Raster")
     plot_raster <- rast(plot_raster)
     terra::writeRaster(plot_raster, file_path, overwrite = TRUE)
   }

@@ -46,6 +46,10 @@ app_ui <- function(request) {
         mod_02_auto_extract_ui("02_auto_extract_1")
       ),
       nav_panel(
+        title = "Visualizer",
+        mod_03_plot_visual_ui("03_plot_visual_1")
+      ),
+      nav_panel(
         title = "flexFitR",
         # mod_01_grid_resize_ui("01_grid_resize_1")
       ),
