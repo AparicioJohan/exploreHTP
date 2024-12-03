@@ -26,7 +26,7 @@ You can launch the application by running:
 autoextract::run_app()
 ```
 
-![](man/figures/logo2.png)
+<img src='man/figures/logo2.png' align="center"/>
 
 ## About
 
@@ -36,7 +36,7 @@ This README has been compiled on the
 
 ``` r
 Sys.time()
-#> [1] "2024-12-02 22:27:09 CST"
+#> [1] "2024-12-02 22:48:49 CST"
 ```
 
 Here are the tests results:
@@ -45,7 +45,7 @@ Here are the tests results:
 devtools::check(quiet = TRUE)
 #> ℹ Loading autoextract
 #> ── R CMD check results ────────────────────────────────── autoextract 0.0.1 ────
-#> Duration: 3m 28.2s
+#> Duration: 4m 1.3s
 #> 
 #> ❯ checking dependencies in R code ... NOTE
 #>   Namespace in Imports field not imported from: 'fields'

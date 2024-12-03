@@ -36,8 +36,7 @@ You can launch the application by running:
 autoextract::run_app()
 ```
 
-
-![](man/figures/logo2.png)
+<img src='man/figures/logo2.png' align="center"/>
 
 ## About
 
