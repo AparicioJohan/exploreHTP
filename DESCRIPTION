@@ -10,7 +10,6 @@ BugReports: https://github.com/AparicioJohan/autoextract/issues
 Imports: 
     bslib,
     config,
-    data.table,
     dplyr,
     DT,
     exactextractr,

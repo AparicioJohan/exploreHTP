@@ -11,30 +11,51 @@ mod_02_auto_extract_ui <- function(id) {
   ns <- NS(id)
   tagList(
     layout_sidebar(
+      fillable = TRUE,
       sidebar = sidebar(
-        open = "closed",
+        open = "desktop",
         bg = "white",
-        title = "Help",
+        title = "Autoextract",
         helpText(
           "This panel is going to help you to extract information from RGB
               ans DSM images."
         ),
-        checkboxInput(
+        shinyWidgets::materialSwitch(
           inputId = ns("save_plots"),
           label = "Save Plots",
-          value = TRUE
+          value = TRUE,
+          status = "primary",
+          right = TRUE
         ),
-        checkboxInput(
+        shinyWidgets::materialSwitch(
           inputId = ns("save_shape"),
           label = "Save Shape",
-          value = TRUE
+          value = TRUE,
+          status = "primary",
+          right = TRUE
         ),
-        # Checkbox for time series
-        checkboxInput(
+        shinyWidgets::materialSwitch(
           inputId = ns("time_serie"),
-          label = "Generate Time Series",
-          value = TRUE
+          label = "Save Time Series",
+          value = FALSE,
+          status = "primary",
+          right = TRUE
         ),
+        # checkboxInput(
+        #   inputId = ns("save_plots"),
+        #   label = "Save Plots",
+        #   value = TRUE
+        # ),
+        # checkboxInput(
+        #   inputId = ns("save_shape"),
+        #   label = "Save Shape",
+        #   value = TRUE
+        # ),
+        # checkboxInput(
+        #   inputId = ns("time_serie"),
+        #   label = "Generate Time Series",
+        #   value = TRUE
+        # )
       ),
       fluidRow(
         h2("Inputs"),
@@ -65,7 +86,7 @@ mod_02_auto_extract_ui <- function(id) {
             inputId = ns("plot_shape"),
             label = "Grid Shapefile (.gpkg)",
             accept = c(".gpkg"),
-            width = "80%"
+            width = "90%"
           ),
           actionButton(
             inputId = ns("view_shape"),
@@ -88,13 +109,13 @@ mod_02_auto_extract_ui <- function(id) {
               inputId = ns("plot_shape_crop"),
               label = "Shapefile to Crop (Optional)",
               accept = c(".gpkg"),
-              width = "80%"
+              width = "90%"
             ),
             fileInput(
               inputId = ns("area"),
               label = "Area of Interest (Optional)",
               accept = c(".gpkg"),
-              width = "80%"
+              width = "90%"
             )
           )
         ),
@@ -110,13 +131,20 @@ mod_02_auto_extract_ui <- function(id) {
               "HUE", "BGI"
             ),
             selected = c("GLI", "NGRDI", "BGI"),
-            multiple = TRUE
+            multiple = TRUE,
+            width = "90%"
           ),
-          selectInput(ns("plot_id"), "Select Plot ID:", choices = NULL),
+          selectInput(
+            inputId = ns("plot_id"),
+            label = "Select Plot ID:",
+            choices = NULL,
+            width = "90%"
+          ),
           textInput(
             inputId = ns("days"),
             label = "Days (comma-separated):",
-            value = "28, 42, 50, 62, 77, 84, 96, 105"
+            value = "28, 42, 50, 62, 77, 84, 96, 105",
+            width = "90%"
           )
         ),
         column(
@@ -126,7 +154,8 @@ mod_02_auto_extract_ui <- function(id) {
           textInput(
             inputId = ns("name_experiment"),
             label = "Experiment Name:",
-            value = "HARS22_chips"
+            value = "HARS22_chips",
+            width = "90%"
           ),
           shinyDirButton(
             id = ns("directory_out"),
@@ -244,17 +273,20 @@ mod_02_auto_extract_server <- function(id) {
     update_progress <- function(current_step, total_steps) {
       w$update(
         html = HTML(
-          "<center>",
+          '<div style="text-align: center;">',
           '<div class="dots-loader"></div>',
-          "<br><br><br>",
+          '<br><br><br><br>',
           sprintf(
-            '<h3 style="color: grey;">Processing step %d of %d</h3>',
+            '<h4
+            style="color: white;
+            background-color: #D0D0D0;
+            padding: 10px;
+            border-radius: 10px;"> Processing step %d of %d</h3>',
             current_step, total_steps
           ),
-          "</center>"
+          '</div>'
         )
-      )
-    }
+      )    }
 
     # Run Extraction
     observeEvent(input$submit,
@@ -359,6 +391,7 @@ mod_02_auto_extract_server <- function(id) {
 
     # View Shape
     output$map <- renderLeaflet({
+      req(input$plot_shape)
       req(plot_shape())
       plot_shape <- plot_shape()
       map <- mapview(

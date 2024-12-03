@@ -14,7 +14,7 @@ mod_03_plot_visual_ui <- function(id) {
       sidebar = sidebar(
         open = "closed",
         bg = "white",
-        title = "Help",
+        title = "Visualizer",
         helpText(
           "This panel is going to help you to visualize plot information."
         )
@@ -37,7 +37,7 @@ mod_03_plot_visual_ui <- function(id) {
             choices = NULL,
             width = "80%"
           ),
-          selectInput(
+          selectizeInput(
             inputId = ns("uid"),
             label = "Select Plot ID:",
             choices = NULL,
@@ -84,8 +84,8 @@ mod_03_plot_visual_ui <- function(id) {
           ),
           actionButton(ns("submit"), "Submit", icon = icon("thumbs-up"))
         ),
-        column(width = 6, plotOutput(ns("plot_time"), height = "600px")),
-        column(width = 6, DTOutput(ns("data_table")))
+        column(width = 6, br(), plotOutput(ns("plot_time"))),
+        column(width = 6, br(), DTOutput(ns("data_table")))
       )
     )
   )
@@ -132,7 +132,7 @@ mod_03_plot_visual_server <- function(id) {
             quiet = TRUE
           )
         }
-        out <- data.table::rbindlist(out, fill = TRUE)
+        out <- do.call(what = rbind, args = out)
       } else {
         out <- NULL
       }
@@ -150,11 +150,12 @@ mod_03_plot_visual_server <- function(id) {
 
     observeEvent(input$plot_id,
       {
-        values <- plot_shape()[, input$plot_id]
-        updateSelectInput(
+        values <- sf::st_drop_geometry(plot_shape())[, input$plot_id]
+        updateSelectizeInput(
           session = session,
           inputId = "uid",
-          choices =  values # Update choices with column names
+          choices =  values, # Update choices with column names
+          server = TRUE
         )
       },
       ignoreInit = TRUE,
@@ -190,11 +191,13 @@ mod_03_plot_visual_server <- function(id) {
               # If user clicks confirm
               shinytoastr::toastr_success(
                 title = "Action Confirmed!",
-                message = "Creating Time Serie",
+                message = "Creating Time Serie...",
                 position = "bottom-right",
                 showMethod = "slideDown",
                 hideMethod = "hide",
-                hideEasing = "linear"
+                hideEasing = "linear",
+                timeOut = 10000,
+                closeButton = TRUE
               )
               w$show()
               tryCatch(
@@ -251,7 +254,9 @@ mod_03_plot_visual_server <- function(id) {
     # Final Table
     output$data_table <- renderDT({
       req(dt_table())
-      dt <- dplyr::mutate_if(dt_table(), is.numeric, round, 3)
+      dt <- dt_table() |>
+        sf::st_drop_geometry() |>
+        dplyr::mutate_if(is.numeric, round, 3)
       datatable(
         data = dt,
         options = list(pageLength = 5, autoWidth = TRUE),

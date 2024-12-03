@@ -36,7 +36,7 @@ app_ui <- function(request) {
               file is too big it can slow things down."),
             open = "closed",
             bg = "white",
-            title = "Help"
+            title = "Resizer"
           ),
           mod_01_grid_resize_ui("01_grid_resize_1")
         )

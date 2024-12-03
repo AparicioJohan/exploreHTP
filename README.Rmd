@@ -36,6 +36,9 @@ You can launch the application by running:
 autoextract::run_app()
 ```
 
+
+![](inst/app/www/logo2.png)
+
 ## About
 
 You are reading the doc about version : `r golem::pkg_version()`
@@ -46,7 +49,7 @@ This README has been compiled on the
 Sys.time()
 ```
 
-Here are the tests results and package coverage:
+Here are the tests results:
 
 ```{r, error = TRUE}
 devtools::check(quiet = TRUE)
@@ -54,8 +57,4 @@ devtools::check(quiet = TRUE)
 
 ```{r echo = FALSE}
 unloadNamespace("autoextract")
-```
-
-```{r, error = TRUE}
-covr::package_coverage()
 ```

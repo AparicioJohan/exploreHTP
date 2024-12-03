@@ -108,8 +108,8 @@ auto_extract <- function(path_rgb = NULL,
     )
     # Data
     dt_tmp <- t1_info |>
-      mutate(canopy = coverage[["AreaPercentage"]], .after = GLI_mean) %>%
-      mutate(total_pixels = coverage[["PixelCount"]], .after = canopy) %>%
+      mutate(canopy = coverage[["AreaPercentage"]], .after = GLI_mean) |>
+      mutate(total_pixels = coverage[["PixelCount"]], .after = canopy) |>
       mutate(DAP = dap[i], .before = all_of(plot_id)) |>
       mutate(plot_area = plot_area, .after = canopy) |>
       mutate(area_pixel = area_pixel[["area_mean"]], .after = canopy) |>
@@ -153,9 +153,9 @@ auto_extract <- function(path_rgb = NULL,
       )
       names(ph_vol)[names(ph_vol) == "volume_sum"] <- "volume"
       # Data
-      dt_tmp <- ph_vol %>%
-        mutate(canopy = coverage[["AreaPercentage"]], .after = volume) %>%
-        mutate(total_pixel = coverage[["PixelCount"]], .after = canopy) %>%
+      dt_tmp <- ph_vol |>
+        mutate(canopy = coverage[["AreaPercentage"]], .after = volume) |>
+        mutate(total_pixel = coverage[["PixelCount"]], .after = canopy) |>
         mutate(DAP = dap[i], .before = all_of(plot_id)) |>
         mutate(plot_area = plot_area, .after = canopy) |>
         mutate(area_pixel = area_pixel[["area_mean"]], .after = canopy) |>
@@ -179,8 +179,7 @@ auto_extract <- function(path_rgb = NULL,
     message("#------------------ Completed: Mosaic ", i, " ------------------#")
   }
   # Data with all indices across dates
-  dt <- data_total |>
-    data.table::rbindlist(fill = TRUE) |>
+  dt <- do.call(what = rbind, args = data_total) |>
     as.data.frame() |>
     dplyr::select(-geom) |>
     mutate_all(~ ifelse(is.nan(.), NA, .)) |>
@@ -196,9 +195,7 @@ auto_extract <- function(path_rgb = NULL,
       na = ""
     )
   # Metadata
-  info_imgs <- tt |>
-    data.table::rbindlist(fill = TRUE) |>
-    as.data.frame()
+  info_imgs <- as.data.frame(do.call(what = rbind, args = tt))
   # Plot Time Series
   if (time_serie) {
     for (w in sort(unique(plot_shape[[plot_id]]))) {
@@ -324,7 +321,8 @@ plot_organizer <- function(id,
     tmp <- list.files(paste0(path, i), pattern = paste0("_", plot, ".tif"))
     obj <- terra::rast(paste0(path, i, "/", tmp))
     names(obj)[1:3] <- c("Red", "Green", "Blue")
-    grid_shape <- st_read(path_shape, layer = paste(i), quiet = TRUE) |>
+    grid_shape <- path_shape |>
+      st_read(layer = paste(i), quiet = TRUE) |>
       filter(.data[[plot_id]] %in% plot) |>
       rename(geometry = geom)
     if (!is.null(angle)) {
@@ -340,22 +338,25 @@ plot_organizer <- function(id,
       )
       grid_shape <- st_transform(grid_shape, crs = st_crs(obj))
     }
-    data <- mutate(as.data.frame(obj, xy = TRUE), DAP = i, Plot = plot)
-    df[[paste0(i)]] <- data
+    df[[paste0(i)]] <- obj |>
+      as.data.frame(xy = TRUE) |>
+      dplyr::select(x, y, Red, Green, Blue) |>
+      mutate(DAP = i, Plot = plot)
     info[[paste0(i)]] <- grid_shape
   }
-  df <- data.table::rbindlist(df, fill = TRUE)
-  info <- sf::st_as_sf(data.table::rbindlist(info))
-
+  df <- do.call(what = rbind, args = df)
+  info <- sf::st_as_sf(do.call(what = rbind, args = info))
   if (!is.null(angle)) {
     df <- df |>
-      filter(Red > 0 & Blue > 0 & Green > 0) |>
+      filter(Red > 0) |>
+      filter(Blue > 0) |>
+      filter(Green > 0) |>
       select(x, y, Red:Blue, DAP, Plot) |>
-      mutate(
-        Red = ifelse(Red == 0 & Green == 0 & Blue == 0, NA, Red),
-        Green = ifelse(Red == 0 & Green == 0 & Blue == 0, NA, Green),
-        Blue = ifelse(Red == 0 & Green == 0 & Blue == 0, NA, Blue)
-      ) |>
+      # mutate(
+      #   Red = ifelse(Red == 0 & Green == 0 & Blue == 0, NA, Red),
+      #   Green = ifelse(Red == 0 & Green == 0 & Blue == 0, NA, Green),
+      #   Blue = ifelse(Red == 0 & Green == 0 & Blue == 0, NA, Blue)
+      # ) |>
       na.omit() |>
       mutate(
         RGB = rgb(
@@ -364,16 +365,17 @@ plot_organizer <- function(id,
           blue = Blue,
           maxColorValue = 255
         )
-      ) |>
-      filter(!RGB %in% "#000000")
+      ) # |>
+      # filter(!RGB %in% "#000000")
   } else {
     df <- df |>
       select(x, y, Red:Blue, DAP, Plot) |>
-      mutate(
-        Red = ifelse(Red == 0 & Green == 0 & Blue == 0, NA, Red),
-        Green = ifelse(Red == 0 & Green == 0 & Blue == 0, NA, Green),
-        Blue = ifelse(Red == 0 & Green == 0 & Blue == 0, NA, Blue)
-      ) |>
+      filter(Red > 0 | Blue > 0 | Green > 0) |>
+      # mutate(
+      #   Red = ifelse(Red == 0 & Green == 0 & Blue == 0, NA, Red),
+      #   Green = ifelse(Red == 0 & Green == 0 & Blue == 0, NA, Green),
+      #   Blue = ifelse(Red == 0 & Green == 0 & Blue == 0, NA, Blue)
+      # ) |>
       na.omit()
   }
   p0 <- df |>

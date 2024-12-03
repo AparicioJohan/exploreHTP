@@ -26,6 +26,8 @@ You can launch the application by running:
 autoextract::run_app()
 ```
 
+![](inst/app/www/logo2.png)
+
 ## About
 
 You are reading the doc about version : 0.0.1
@@ -34,27 +36,20 @@ This README has been compiled on the
 
 ``` r
 Sys.time()
-#> [1] "2024-11-28 11:07:14 CST"
+#> [1] "2024-12-02 22:27:09 CST"
 ```
 
-Here are the tests results and package coverage:
+Here are the tests results:
 
 ``` r
 devtools::check(quiet = TRUE)
 #> ℹ Loading autoextract
 #> ── R CMD check results ────────────────────────────────── autoextract 0.0.1 ────
-#> Duration: 1m 42.5s
+#> Duration: 3m 28.2s
 #> 
-#> 0 errors ✔ | 0 warnings ✔ | 0 notes ✔
-```
-
-``` r
-covr::package_coverage()
-#> autoextract Coverage: 55.71%
-#> R/app_config.R: 0.00%
-#> R/app_server.R: 0.00%
-#> R/app_ui.R: 0.00%
-#> R/fct_helpers.R: 0.00%
-#> R/run_app.R: 0.00%
-#> R/mod_01_grid_resize.R: 76.47%
+#> ❯ checking dependencies in R code ... NOTE
+#>   Namespace in Imports field not imported from: 'fields'
+#>     All declared Imports should be used.
+#> 
+#> 0 errors ✔ | 0 warnings ✔ | 1 note ✖
 ```
