@@ -26,7 +26,7 @@ You can launch the application by running:
 autoextract::run_app()
 ```
 
-![](inst/app/www/logo2.png)
+![](man/figures/logo2.png)
 
 ## About
 
