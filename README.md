@@ -26,7 +26,7 @@ You can launch the application by running:
 autoextract::run_app()
 ```
 
-<img src='man/figures/logo2.jpg' align="center"/>
+<img src='man/figures/Logo2.jpg' align="center"/>
 
 ## About
 
