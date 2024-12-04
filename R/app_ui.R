@@ -9,37 +9,16 @@ app_ui <- function(request) {
     # Leave this function for adding external resources
     golem_add_external_resources(),
     # Your application UI logic
-    # page_fillable(
-    #   titlePanel("Rotate Simple Feature"),
-    #   class = "bslib-page-dashboard",
-    #   # use default Bootstrap styles
-    #   theme = bs_theme(preset = "bootstrap"),
-    #   # input_dark_mode(id = "col"),
-    #   mod_01_grid_resize_ui("01_grid_resize_1")
-    # )
     page_navbar(
       title = "Image Analizer",
-      theme = bs_theme(
-        preset = "shiny",
-        version = 5
-      ),
+      theme = bs_theme(preset = "shiny", version = 5),
       collapsible = TRUE,
-      id = "navbar",
+      id = "main_navbar",
       fillable = TRUE,
       nav_panel(
-        title = "Resizer",
-        layout_sidebar(
-          sidebar = sidebar(
-            helpText(
-              "Make sure about the format of the shapefile, it needs to be
-              .gpkg, also notice that the Mosaic file is optional, and if this
-              file is too big it can slow things down."),
-            open = "closed",
-            bg = "white",
-            title = "Resizer"
-          ),
-          mod_01_grid_resize_ui("01_grid_resize_1")
-        )
+        title = "Home",
+        icon = icon("home"),
+        mod_00_home_ui("00_home_1")
       ),
       nav_panel(
         title = "Autoextract",
@@ -50,11 +29,36 @@ app_ui <- function(request) {
         mod_03_plot_visual_ui("03_plot_visual_1")
       ),
       nav_panel(
+        title = "Resizer",
+        layout_sidebar(
+          sidebar = sidebar(
+            helpText(
+              "Make sure about the format of the shapefile, it needs to be
+              .gpkg, also notice that the Mosaic file is optional, and if this
+              file is too big it can slow things down."
+            ),
+            open = "closed",
+            bg = "white",
+            title = "Resizer"
+          ),
+          mod_01_grid_resize_ui("01_grid_resize_1")
+        )
+      ),
+      nav_panel(
         title = "flexFitR",
         # mod_01_grid_resize_ui("01_grid_resize_1")
       ),
+      nav_spacer(),
+      nav_item(
+        tags$a(
+          tags$span(icon("github"), "Source code"),
+          href = "https://github.com/AparicioJohan/autoextract",
+          target = "_blank"
+        )
+      ),
       nav_panel(
         title = "About",
+        icon = icon("question")
         # mod_01_grid_resize_ui("01_grid_resize_1")
       )
     )

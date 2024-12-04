@@ -36,16 +36,16 @@ This README has been compiled on the
 
 ``` r
 Sys.time()
-#> [1] "2024-12-02 22:48:49 CST"
+#> [1] "2024-12-03 21:41:10 CST"
 ```
 
 Here are the tests results:
 
 ``` r
-devtools::check(quiet = TRUE)
+devtools::check(quiet = TRUE, cran = FALSE)
 #> ℹ Loading autoextract
 #> ── R CMD check results ────────────────────────────────── autoextract 0.0.1 ────
-#> Duration: 4m 1.3s
+#> Duration: 3m 15.9s
 #> 
 #> ❯ checking dependencies in R code ... NOTE
 #>   Namespace in Imports field not imported from: 'fields'

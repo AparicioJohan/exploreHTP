@@ -28,34 +28,12 @@ mod_02_auto_extract_ui <- function(id) {
           right = TRUE
         ),
         shinyWidgets::materialSwitch(
-          inputId = ns("save_shape"),
-          label = "Save Shape",
-          value = TRUE,
-          status = "primary",
-          right = TRUE
-        ),
-        shinyWidgets::materialSwitch(
           inputId = ns("time_serie"),
           label = "Save Time Series",
           value = FALSE,
           status = "primary",
           right = TRUE
         ),
-        # checkboxInput(
-        #   inputId = ns("save_plots"),
-        #   label = "Save Plots",
-        #   value = TRUE
-        # ),
-        # checkboxInput(
-        #   inputId = ns("save_shape"),
-        #   label = "Save Shape",
-        #   value = TRUE
-        # ),
-        # checkboxInput(
-        #   inputId = ns("time_serie"),
-        #   label = "Generate Time Series",
-        #   value = TRUE
-        # )
       ),
       fluidRow(
         h2("Inputs"),
@@ -299,7 +277,7 @@ mod_02_auto_extract_server <- function(id) {
         dap <- as.numeric(unlist(strsplit(input$days, ",\\s*")))
         plot_id <- input$plot_id
         save_plots <- input$save_plots
-        save_shape <- input$save_shape
+        save_shape <- TRUE
         time_serie <- input$time_serie
         name_experiment <- input$name_experiment
         shinyalert(

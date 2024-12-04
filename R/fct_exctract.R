@@ -289,17 +289,17 @@ crop_grid <- function(mosaic,
     grid_poly <- sf::st_transform(grid_poly, crs = sf::st_crs(stars_object))
     plot_raster <- sf::st_crop(stars_object, grid_poly)
     if (nbands > 2) {
-      plot_raster <- stars::st_warp(plot_raster, crs = st_crs(mosaic))
+      plot_raster <- stars::st_warp(plot_raster, crs = sf::st_crs(mosaic))
       plot_raster[is.na(plot_raster)] <- 0
     }
     if (nbands == 1) {
-      plot_raster <- st_warp(plot_raster, crs = st_crs(mosaic))
+      plot_raster <- stars::st_warp(plot_raster, crs = sf::st_crs(mosaic))
       plot_raster[is.na(plot_raster)] <- NA
     }
     file_name <- paste0("ID_", plot_shape[[plot_id]][i], ".tif")
     file_path <- file.path(output_dir, file_name)
     plot_raster <- methods::as(plot_raster, "Raster")
-    plot_raster <- rast(plot_raster)
+    plot_raster <- terra::rast(plot_raster)
     terra::writeRaster(plot_raster, file_path, overwrite = TRUE)
   }
 }
@@ -311,24 +311,26 @@ plot_organizer <- function(id,
                            angle = NULL,
                            color = "white",
                            base_size = 12,
-                           color_grid = "red") {
-  plot <- id
-  path <- path
-  path_shape <- path_shape
-  k <- sort(as.numeric(list.files(path)))
+                           color_grid = "red",
+                           remove_border = TRUE) {
   df <- info <- list()
-  for (i in k) {
-    tmp <- list.files(paste0(path, i), pattern = paste0("_", plot, ".tif"))
-    obj <- terra::rast(paste0(path, i, "/", tmp))
-    names(obj)[1:3] <- c("Red", "Green", "Blue")
+  folders <- sort(as.numeric(list.files(path)))
+  for (i in folders) {
+    path_tmp <- list.files(
+      path = paste0(path, i),
+      pattern = paste0("_", id, ".tif"),
+      full.names = TRUE
+    )
+    mosaic <- terra::rast(path_tmp)
+    set.names(mosaic, value = c("Red", "Green", "Blue"), index = 1:3)
     grid_shape <- path_shape |>
       st_read(layer = paste(i), quiet = TRUE) |>
-      filter(.data[[plot_id]] %in% plot) |>
+      filter(.data[[plot_id]] %in% id) |>
       rename(geometry = geom)
     if (!is.null(angle)) {
-      y <- raster::stack(obj)
+      y <- raster::stack(mosaic)
       raster::crs(y) <- "+proj=aeqd +ellps=sphere +lat_0=90 +lon_0=0"
-      obj <- raster::projectRaster(
+      mosaic <- raster::projectRaster(
         from = y,
         res = res(y),
         crs = paste0("+proj=aeqd +ellps=sphere +lat_0=90 +lon_0=", angle)
@@ -336,60 +338,39 @@ plot_organizer <- function(id,
       suppressWarnings(
         st_crs(grid_shape) <- "+proj=aeqd +ellps=sphere +lat_0=90 +lon_0=0"
       )
-      grid_shape <- st_transform(grid_shape, crs = st_crs(obj))
+      grid_shape <- st_transform(grid_shape, crs = st_crs(mosaic))
     }
-    df[[paste0(i)]] <- obj |>
+    p <- paste0(i)
+    df[[p]] <- mosaic |>
       as.data.frame(xy = TRUE) |>
       dplyr::select(x, y, Red, Green, Blue) |>
-      mutate(DAP = i, Plot = plot)
-    info[[paste0(i)]] <- grid_shape
+      dplyr::mutate(DAP = i, Plot = id)
+    info[[p]] <- grid_shape
   }
-  df <- do.call(what = rbind, args = df)
   info <- sf::st_as_sf(do.call(what = rbind, args = info))
-  if (!is.null(angle)) {
+  df <- do.call(what = rbind, args = df) |>
+    dplyr::filter(Red >= 0 & Blue >= 0 & Green >= 0) |>
+    dplyr::select(x, y, Red:Blue, DAP, Plot) |>
+    na.omit()
+  if (remove_border) {
     df <- df |>
-      filter(Red > 0) |>
-      filter(Blue > 0) |>
-      filter(Green > 0) |>
-      select(x, y, Red:Blue, DAP, Plot) |>
-      # mutate(
-      #   Red = ifelse(Red == 0 & Green == 0 & Blue == 0, NA, Red),
-      #   Green = ifelse(Red == 0 & Green == 0 & Blue == 0, NA, Green),
-      #   Blue = ifelse(Red == 0 & Green == 0 & Blue == 0, NA, Blue)
-      # ) |>
-      na.omit() |>
-      mutate(
+      dplyr::mutate(
         RGB = rgb(
           red = Red,
           green = Green,
           blue = Blue,
           maxColorValue = 255
         )
-      ) # |>
-      # filter(!RGB %in% "#000000")
-  } else {
-    df <- df |>
-      select(x, y, Red:Blue, DAP, Plot) |>
-      filter(Red > 0 | Blue > 0 | Green > 0) |>
-      # mutate(
-      #   Red = ifelse(Red == 0 & Green == 0 & Blue == 0, NA, Red),
-      #   Green = ifelse(Red == 0 & Green == 0 & Blue == 0, NA, Green),
-      #   Blue = ifelse(Red == 0 & Green == 0 & Blue == 0, NA, Blue)
-      # ) |>
-      na.omit()
+      ) |>
+      dplyr::filter(!RGB %in% "#000000")
   }
   p0 <- df |>
     ggplot() +
     geom_raster(
-      aes(
+      mapping = aes(
         x = x,
         y = y,
-        fill = rgb(
-          red = Red,
-          green = Green,
-          blue = Blue,
-          maxColorValue = 255
-        )
+        fill = rgb(red = Red, green = Green, blue = Blue, maxColorValue = 255)
       ),
       show.legend = FALSE
     ) +

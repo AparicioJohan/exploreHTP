@@ -12,17 +12,45 @@ mod_03_plot_visual_ui <- function(id) {
   tagList(
     layout_sidebar(
       sidebar = sidebar(
-        open = "closed",
+        open = "desktop",
         bg = "white",
         title = "Visualizer",
         helpText(
           "This panel is going to help you to visualize plot information."
+        ),
+        shinyWidgets::materialSwitch(
+          inputId = ns("remove_border"),
+          label = "Remove Bg",
+          value = TRUE,
+          status = "primary",
+          right = TRUE
+        ),
+        shinyWidgets::radioGroupButtons(
+          inputId = ns("file_type"),
+          label = "Save As:",
+          choices = c("svg", "png"),
+          size = "sm",
+          checkIcon = list(yes = icon("ok", lib = "glyphicon"))
+        ),
+        sliderInput(
+          inputId = ns("width"),
+          label = "Width",
+          min = 2,
+          max = 15,
+          value = 10,
+          step = 1
+        ),
+        sliderInput(
+          inputId = ns("height"),
+          label = "Height",
+          min = 2,
+          max = 15,
+          value = 6,
+          step = 1
         )
       ),
       fluidRow(
         h2("Inputs"),
-        # column(),
-        # column(),
         column(
           width = 4,
           fileInput(
@@ -82,7 +110,8 @@ mod_03_plot_visual_ui <- function(id) {
             label = "Apply Angle?",
             value = FALSE
           ),
-          actionButton(ns("submit"), "Submit", icon = icon("thumbs-up"))
+          actionButton(ns("submit"), "Submit", icon = icon("thumbs-up")),
+          downloadButton(outputId = ns("download"), label = "Download")
         ),
         column(width = 6, br(), plotOutput(ns("plot_time"))),
         column(width = 6, br(), DTOutput(ns("data_table")))
@@ -154,7 +183,7 @@ mod_03_plot_visual_server <- function(id) {
         updateSelectizeInput(
           session = session,
           inputId = "uid",
-          choices =  values, # Update choices with column names
+          choices = values, # Update choices with column names
           server = TRUE
         )
       },
@@ -162,12 +191,17 @@ mod_03_plot_visual_server <- function(id) {
       ignoreNULL = TRUE
     )
 
+    # Progress
     w <- Waiter$new(
       html = HTML(
         "<center>",
         '<div class="dots-loader"></div>',
         "<br><br><br>",
-        '<h3 style="color: grey;">Processing...</h3>',
+        '<h4
+          style="color: white;
+          background-color: #D0D0D0;
+          padding: 10px;
+          border-radius: 10px;">Processing...</h3>',
         "</center>"
       ),
       color = transparent(0.4)
@@ -177,6 +211,8 @@ mod_03_plot_visual_server <- function(id) {
       {
         path_shape <- input$plot_shape$datapath
         path_plots <- paste0(path_plot(), "/")
+        remove_border <- input$remove_border
+        color_val <- "red"
         if (input$apply_angle) angle <- input$angle else angle <- NULL
         shinyalert(
           title = "Are you sure?",
@@ -210,11 +246,17 @@ mod_03_plot_visual_server <- function(id) {
                       path_shape = path_shape,
                       base_size = input$base_size,
                       angle = angle,
-                      color = "black"
+                      color = "black",
+                      remove_border = remove_border,
+                      color_grid = color_val
                     )
                   )
-                  gg_objt({tmp$figure})
-                  dt_table({tmp$info})
+                  gg_objt({
+                    tmp$figure
+                  })
+                  dt_table({
+                    tmp$info
+                  })
                 },
                 error = function(e) {
                   shinytoastr::toastr_error(
@@ -246,10 +288,9 @@ mod_03_plot_visual_server <- function(id) {
     )
 
     output$plot_time <- renderPlot({
-      req(gg_objt())  # Render only if a plot is available
+      req(gg_objt()) # Render only if a plot is available
       gg_objt()
     })
-
 
     # Final Table
     output$data_table <- renderDT({
@@ -263,6 +304,31 @@ mod_03_plot_visual_server <- function(id) {
         filter = "top"
       )
     })
+
+    # Download Figure
+    output$download <- downloadHandler(
+      filename = function() {
+        req(dt_table())
+        paste0("plot_", input$uid, ".", input$file_type)
+      },
+      content = function(file) {
+        if (input$file_type == "png") {
+          grDevices::png(
+            filename = file,
+            width = input$width,
+            height = input$height,
+            units = "in",
+            res = 300
+          )
+          print(gg_objt())
+          grDevices::dev.off()
+        } else {
+          grDevices::svg(file, width = input$width, height = input$height)
+          print(gg_objt())
+          grDevices::dev.off()
+        }
+      }
+    )
   })
 }
 
