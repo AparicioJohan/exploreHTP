@@ -13,15 +13,14 @@
 #' @import sf
 #' @import mapview
 #' @import shinyFiles
-#' @importFrom FIELDimageR fieldIndex fieldMask fieldHeight
-#' @importFrom dplyr mutate select mutate_all rename filter all_of across
 #' @import stars
 #' @import exactextractr
 #' @import ggplot2
+#' @import waiter
+#' @importFrom dplyr mutate select mutate_all rename filter all_of across
 #' @importFrom shinyalert shinyalert
 #' @importFrom utils write.csv
 #' @importFrom grDevices rgb
-#' @import waiter
 #' @importFrom DT renderDT datatable DTOutput
 run_app <- function(
   onStart = NULL,

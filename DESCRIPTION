@@ -13,8 +13,6 @@ Imports:
     dplyr,
     DT,
     exactextractr,
-    FIELDimageR (>= 0.6.2),
-    fields,
     ggplot2,
     golem,
     leaflet,
@@ -36,5 +34,5 @@ Suggests:
     methods,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
-Remotes: 
-    OpenDroneMap/FIELDimageR
+Depends: 
+    R (>= 2.10)

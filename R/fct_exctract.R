@@ -50,19 +50,13 @@ auto_extract <- function(path_rgb = NULL,
     }
     # Applying masking
     message("Removing Soil")
-    t1_no_soil <- fieldMask(
-      mosaic = t1,
-      plot = FALSE,
-      index = "HUE",
-      cropValue = 0,
-      cropAbove = TRUE
-    )
+    t1_no_soil <- calc_mask(t1, index = "HUE", value = 0, crop_above = TRUE)
     # Save individual plots per date no-soil
     if (save_plots) {
       path <- paste0(path_out, "/", name_experiment, "/plot_hue/", dap[i], "/")
       create_folder_if_not_exists(path)
       crop_grid(
-        mosaic = t1_no_soil$newMosaic,
+        mosaic = t1_no_soil$new,
         plot_shape = plot_shape_crop,
         plot_id = plot_id,
         output_dir = path
@@ -70,11 +64,7 @@ auto_extract <- function(path_rgb = NULL,
     }
     # Calculating Indices
     message("Calculating Indices")
-    t1_indices <- fieldIndex(
-      mosaic = t1_no_soil$newMosaic,
-      index = indices,
-      plot = FALSE
-    )
+    t1_indices <- calc_index(mosaic = t1_no_soil$new, index = indices)
     # Extracting Information
     message("Extracting Information")
     t1_info <- field_extract(
@@ -83,7 +73,7 @@ auto_extract <- function(path_rgb = NULL,
     )
     # Calculating GLI without mask
     message("Calculating GLI")
-    t1_gli <- fieldIndex(t1, index = "GLI", plot = FALSE)
+    t1_gli <- calc_index(t1, index = "GLI")
     # Extracting GLI Information
     message("Extracting GLI")
     t1_info_gli <- field_extract(t1_gli[["GLI"]], plot_shape = plot_shape)
@@ -93,7 +83,7 @@ auto_extract <- function(path_rgb = NULL,
       mutate(DAP = dap[i], .before = image)
     # Area Pixel
     area_pixel <- field_extract(
-      mosaic = cellSize(t1_no_soil$newMosaic),
+      mosaic = cellSize(t1_no_soil$new),
       plot_shape = plot_shape,
       fun = "mean"
     )
@@ -102,7 +92,7 @@ auto_extract <- function(path_rgb = NULL,
     # Canopy
     message("Canopy Cover")
     coverage <- field_area(
-      mosaic = t1_no_soil$newMosaic,
+      mosaic = t1_no_soil$new,
       field_shape = plot_shape,
       field = plot_id
     )
@@ -119,35 +109,35 @@ auto_extract <- function(path_rgb = NULL,
       message("Digital Surface Model")
       if (!is.null(area_of_interest)) {
         if (i == 1) {
-          dsm_0_crop <- dsm_1_crop <- crop(rast(path_dsm[1]), area_of_interest)
+          dsm_base <- dsm_k <- crop(rast(path_dsm[1]), area_of_interest)
         } else {
-          dsm_1_crop <- crop(rast(path_dsm[i]), area_of_interest)
+          dsm_k <- crop(rast(path_dsm[i]), area_of_interest)
         }
       } else {
         if (i == 1) {
-          dsm_0_crop <- dsm_1_crop <- rast(path_dsm[1])
+          dsm_base <- dsm_k <- rast(path_dsm[1])
         } else {
-          dsm_1_crop <- rast(path_dsm[i])
+          dsm_k <- rast(path_dsm[i])
         }
       }
       # Check CRS
-      if (crs(dsm_0_crop) != crs(dsm_1_crop)) {
-        crs(dsm_1_crop) <- crs(dsm_0_crop)
+      if (crs(dsm_base) != crs(dsm_k)) {
+        crs(dsm_k) <- crs(dsm_base)
       }
       # Images info
       tt[[i]] <- rbind.data.frame(
         mos_info(t1, name = paste("rgb", dap[i])),
-        mos_info(dsm_1_crop, name = "dsm")
+        mos_info(dsm_k, name = "dsm")
       ) |>
         mutate(DAP = dap[i], .before = image)
       # Canopy Height Model (CHM) and Canopy Volume Model (CVM)
       message("Canopy Height Model")
-      chm <- fieldHeight(dsm_0_crop, dsm_1_crop)
-      chm_rem_soil <- fieldMask(chm, mask = t1_no_soil$mask, plot = FALSE)
-      ph <- field_extract(chm_rem_soil$newMosaic$height, plot_shape = t1_info)
+      chm <- calc_height(dsm_base, dsm_k)
+      chm_rem_soil <- calc_mask(chm, mask = t1_no_soil$mask)
+      ph <- field_extract(chm_rem_soil$new$height, plot_shape = t1_info)
       names(ph)[names(ph) == "height_mean"] <- "ph"
       ph_vol <- field_extract(
-        mosaic = chm_rem_soil$newMosaic$volume,
+        mosaic = chm_rem_soil$new$volume,
         plot_shape = ph,
         fun = "sum"
       )
@@ -473,4 +463,119 @@ field_area <- function(mosaic, field_shape, field = NULL) {
     area_percentage
   )
   return(area_percentage)
+}
+
+
+calc_index <- function(mosaic,
+                       red = 1,
+                       green = 2,
+                       blue = 3,
+                       rededge = NULL,
+                       nir = NULL,
+                       index = "HUE") {
+  catalog <- autoextract::indices
+  num_band <- nlyr(mosaic)
+  if (num_band < 3) {
+    stop("At least 3 bands (RGB) are necessary to calculate indices")
+  }
+  if (!is.null(rededge) || !is.null(nir)) {
+    if (num_band < 4) {
+      stop("RedEdge and/or NIR is/are not available in your mosaic")
+    }
+  }
+  lister <- as.character(catalog$index)
+  if (is.null(index)) {
+    stop("Choose one or more indices")
+  }
+  if (!all(index %in% lister)) {
+    stop(paste("Index: ", index[!index %in% lister], " is not available"))
+  }
+  nir_re <- as.character(catalog$index[catalog$band %in% c("RedEdge", "NIR")])
+  if (any(nir_re %in% index) && is.null(nir)) {
+    stg <- paste("Index: ", paste(nir_re[nir_re %in% index], collapse = ", "))
+    stop(paste0(stg, " needs NIR/RedEdge band to be calculated"))
+  }
+  B <- mosaic[[blue]]
+  G <- mosaic[[green]]
+  R <- mosaic[[red]]
+  names(mosaic)[c(blue, green, red)] <- c("Blue", "Green", "Red")
+  if (!is.null(rededge)) {
+    RE <- mosaic[[rededge]]
+    names(mosaic)[rededge] <- "RedEdge"
+  }
+  if (!is.null(nir)) {
+    NIR1 <- mosaic[[nir]]
+    names(mosaic)[nir] <- "NIR"
+  }
+  for (i in 1:length(index)) {
+    value <- index[i]
+    new_layer <- eval(parse(text = paste(catalog$eq[catalog$index == value])))
+    mosaic <- append(mosaic, new_layer)
+    names(mosaic)[num_band + i] <- as.character(value)
+  }
+  return(mosaic)
+}
+
+calc_mask <- function(mosaic,
+                      red = 1,
+                      green = 2,
+                      blue = 3,
+                      rededge = NULL,
+                      nir = NULL,
+                      index = "HUE",
+                      value = 0,
+                      crop_above = TRUE,
+                      mask = NULL) {
+  num_band <- nlyr(mosaic)
+  if (is.null(mask)) {
+    mr <- calc_index(
+      mosaic = mosaic,
+      red = red,
+      green = green,
+      blue = blue,
+      rededge = rededge,
+      nir = nir,
+      index = index
+    )[[num_band + 1]]
+    if (crop_above) {
+      m <- mr > value
+    } else {
+      m <- mr < value
+    }
+    mosaic <- terra::mask(mosaic, m, maskvalue = TRUE)
+  } else {
+    if (nlyr(mask) > 1) {
+      stop("Mask must have only one band.")
+    }
+    mr <- mask
+    mosaic <- terra::crop(x = mosaic, y = mr)
+    mosaic <- terra::project(mosaic, mask, method = "near")
+    if (crop_above) {
+      m <- mr > value
+    } else {
+      m <- mr < value
+    }
+    mosaic <- terra::mask(mosaic, m, maskvalue = TRUE)
+  }
+  out <- list(new = mosaic, mask = m)
+  return(out)
+}
+
+
+calc_height <- function(dsm_before, dsm_after) {
+  if (!inherits(dsm_before, "SpatRaster") || !nlyr(dsm_before) ==
+      1 || terra::is.bool(dsm_before) || is.list(dsm_before)) {
+    stop("Error: Invalid 'dsm_before' raster object.")
+  }
+  if (!inherits(dsm_after, "SpatRaster") || !nlyr(dsm_after) ==
+      1 || terra::is.bool(dsm_after) || is.list(dsm_after)) {
+    stop("Error: Invalid 'dsm_after' raster object.")
+  }
+  dsm_ini <- resample(dsm_before, dsm_after)
+  height <- dsm_after - dsm_ini
+  names(height) <- "height"
+  volume <- terra::cellSize(height) * height
+  names(volume) <- "volume"
+  mosaic <- append(height, volume)
+  return(mosaic)
 }
