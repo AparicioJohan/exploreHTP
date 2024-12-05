@@ -51,7 +51,7 @@ Sys.time()
 Here are the tests results:
 
 ```{r, error = TRUE}
-devtools::check(quiet = TRUE, cran = FALSE)
+devtools::check(quiet = TRUE)
 ```
 
 ```{r echo = FALSE}
