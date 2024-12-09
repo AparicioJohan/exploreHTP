@@ -13,7 +13,6 @@ mod_03_plot_visual_ui <- function(id) {
     layout_sidebar(
       sidebar = sidebar(
         open = "desktop",
-        bg = "white",
         title = "Visualizer",
         helpText(
           "This panel is going to help you to visualize plot information."
@@ -61,7 +60,7 @@ mod_03_plot_visual_ui <- function(id) {
           ),
           selectInput(
             inputId = ns("plot_id"),
-            label = "Column Plot:",
+            label = "Plot Column:",
             choices = NULL,
             width = "80%"
           ),
@@ -123,7 +122,7 @@ mod_03_plot_visual_ui <- function(id) {
 #' 03_plot_visual Server Functions
 #'
 #' @noRd
-mod_03_plot_visual_server <- function(id) {
+mod_03_plot_visual_server <- function(id, dark_mode) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -207,12 +206,14 @@ mod_03_plot_visual_server <- function(id) {
       color = transparent(0.4)
     )
 
+    # Creating Plot
     observeEvent(input$submit,
       {
         path_shape <- input$plot_shape$datapath
         path_plots <- paste0(path_plot(), "/")
         remove_border <- input$remove_border
         color_val <- "red"
+        color <- "black"
         if (input$apply_angle) angle <- input$angle else angle <- NULL
         shinyalert(
           title = "Are you sure?",
@@ -246,7 +247,7 @@ mod_03_plot_visual_server <- function(id) {
                       path_shape = path_shape,
                       base_size = input$base_size,
                       angle = angle,
-                      color = "black",
+                      color = color,
                       remove_border = remove_border,
                       color_grid = color_val
                     )
@@ -287,10 +288,15 @@ mod_03_plot_visual_server <- function(id) {
       ignoreInit = TRUE
     )
 
-    output$plot_time <- renderPlot({
-      req(gg_objt()) # Render only if a plot is available
-      gg_objt()
-    })
+    # print plot
+    output$plot_time <- renderPlot(
+      {
+        req(gg_objt())
+        color <- ifelse(dark_mode() == "light", "black", "white")
+        gg_objt() + theme(strip.text = element_text(colour = color))
+      },
+      bg = "transparent"
+    )
 
     # Final Table
     output$data_table <- renderDT({

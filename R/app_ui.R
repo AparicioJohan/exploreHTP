@@ -10,7 +10,16 @@ app_ui <- function(request) {
     golem_add_external_resources(),
     # Your application UI logic
     page_navbar(
-      title = "Image Analizer",
+      title = tags$span(
+        # tags$img(
+        #   src = "www/logo.png",
+        #   width = "46px",
+        #   height = "auto",
+        #   class = "me-3",
+        #   alt = "Condor-Sky logo"
+        # ),
+        "Image analyzer"
+      ),
       theme = bs_theme(preset = "shiny", version = 5),
       collapsible = TRUE,
       id = "main_navbar",
@@ -29,6 +38,10 @@ app_ui <- function(request) {
         mod_03_plot_visual_ui("03_plot_visual_1")
       ),
       nav_panel(
+        title = "flexFitR",
+        mod_04_flexfitr_ui("04_flexfitr_1")
+      ),
+      nav_panel(
         title = "Resizer",
         layout_sidebar(
           sidebar = sidebar(
@@ -38,15 +51,10 @@ app_ui <- function(request) {
               file is too big it can slow things down."
             ),
             open = "closed",
-            bg = "white",
             title = "Resizer"
           ),
           mod_01_grid_resize_ui("01_grid_resize_1")
         )
-      ),
-      nav_panel(
-        title = "flexFitR",
-        # mod_01_grid_resize_ui("01_grid_resize_1")
       ),
       nav_spacer(),
       nav_item(
@@ -60,6 +68,9 @@ app_ui <- function(request) {
         title = "About",
         icon = icon("question")
         # mod_01_grid_resize_ui("01_grid_resize_1")
+      ),
+      nav_item(
+        input_dark_mode(id = "dark_mode", mode = "light")
       )
     )
   )

@@ -1,13 +1,14 @@
 utils::globalVariables(
-c('GLI_mean',
-  'canopy',
-  'volume',
-  'total_pixel',
-  'DAP',
-  'Red',
-  'Blue',
-  'Green',
-  'x',
-  'Plot')
+  c(
+    "GLI_mean",
+    "canopy",
+    "volume",
+    "total_pixel",
+    "Time",
+    "Red",
+    "Blue",
+    "Green",
+    "x",
+    "Plot"
+  )
 )
-

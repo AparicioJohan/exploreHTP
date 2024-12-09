@@ -5,11 +5,11 @@ output: github_document
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 ```{r, include = FALSE}
-  knitr::opts_chunk$set(
-    collapse = TRUE,
-    comment = "#>",
-    fig.path = "man/figures/README-",
-    out.width = "100%"
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
 )
 ```
 
@@ -38,6 +38,11 @@ autoextract::run_app()
 
 <img src='man/figures/Logo2.jpg' align="center"/>
 
+<br>
+<br>
+
+<img src='man/figures/desktop.png' align="center"/>
+
 ## About
 
 You are reading the doc about version : `r golem::pkg_version()`
@@ -46,14 +51,4 @@ This README has been compiled on the
 
 ```{r}
 Sys.time()
-```
-
-Here are the tests results:
-
-```{r, error = TRUE}
-devtools::check(quiet = TRUE)
-```
-
-```{r echo = FALSE}
-unloadNamespace("autoextract")
 ```

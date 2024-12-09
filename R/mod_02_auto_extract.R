@@ -14,12 +14,7 @@ mod_02_auto_extract_ui <- function(id) {
       fillable = TRUE,
       sidebar = sidebar(
         open = "desktop",
-        bg = "white",
         title = "Autoextract",
-        helpText(
-          "This panel is going to help you to extract information from RGB
-              ans DSM images."
-        ),
         shinyWidgets::materialSwitch(
           inputId = ns("save_plots"),
           label = "Save Plots",
@@ -34,6 +29,43 @@ mod_02_auto_extract_ui <- function(id) {
           status = "primary",
           right = TRUE
         ),
+        accordion(
+          open = FALSE,
+          accordion_panel(
+            "Settings",
+            icon = icon("cog"),
+            textInput(
+              inputId = ns("rgb_bands"),
+              label = "RGB/RedEdge/NIR:",
+              value = "1, 2, 3",
+              width = "90%"
+            ),
+            selectInput(
+              inputId = ns("seg_index"),
+              label = "Segmentation Index:",
+              choices = c(
+                "BI", "BIM", "SCI", "GLI",
+                "HI", "NGRDI", "SI", "VARI",
+                "HUE", "BGI"
+              ),
+              selected = c("HUE"),
+              multiple = FALSE,
+              width = "90%"
+            ),
+            checkboxInput(
+              inputId = ns("mask_above"),
+              label = "Mask above?",
+              value = FALSE,
+              width = "100%"
+            ),
+            textInput(
+              inputId = ns("thrsh"),
+              label = "Threshold:",
+              value = 0,
+              width = "90%"
+            )
+          )
+        )
       ),
       fluidRow(
         h2("Inputs"),
@@ -60,20 +92,22 @@ mod_02_auto_extract_ui <- function(id) {
         column(
           width = 4,
           br(),
-          fileInput(
-            inputId = ns("plot_shape"),
-            label = "Grid Shapefile (.gpkg)",
-            accept = c(".gpkg"),
-            width = "90%"
+          tags$div(
+            style = "display: flex; align-items: center; gap: 10px;",
+            fileInput(
+              inputId = ns("plot_shape"),
+              label = "Grid Shapefile (.gpkg)",
+              accept = c(".gpkg"),
+              width = "90%"
+            ),
+            shinyWidgets::actionBttn(
+              inputId = ns("view_shape"),
+              label = NULL,
+              style = "unite",
+              icon = icon("eye"),
+              color = "primary"
+            )
           ),
-          actionButton(
-            inputId = ns("view_shape"),
-            label = "View",
-            icon = icon("eye"),
-            class = "btn-primary"
-          ),
-          br(),
-          br(),
           checkboxInput(
             inputId = ns("optionals"),
             label = "More Options?",
@@ -253,7 +287,7 @@ mod_02_auto_extract_server <- function(id) {
         html = HTML(
           '<div style="text-align: center;">',
           '<div class="dots-loader"></div>',
-          '<br><br><br><br>',
+          "<br><br><br><br>",
           sprintf(
             '<h4
             style="color: white;
@@ -262,9 +296,10 @@ mod_02_auto_extract_server <- function(id) {
             border-radius: 10px;"> Processing step %d of %d</h3>',
             current_step, total_steps
           ),
-          '</div>'
+          "</div>"
         )
-      )    }
+      )
+    }
 
     # Run Extraction
     observeEvent(input$submit,
@@ -274,7 +309,10 @@ mod_02_auto_extract_server <- function(id) {
         path_out <- path_out()
         indices <- input$indices
         bands <- c("Red", "Green", "Blue")
-        dap <- as.numeric(unlist(strsplit(input$days, ",\\s*")))
+        index_mask <- if (input$seg_index == "") NULL else input$seg_index
+        mask_above <- input$mask_above
+        threshold <- input$thrsh
+        time <- as.numeric(unlist(strsplit(input$days, ",\\s*")))
         plot_id <- input$plot_id
         save_plots <- input$save_plots
         save_shape <- TRUE
@@ -311,7 +349,10 @@ mod_02_auto_extract_server <- function(id) {
                       plot_shape_crop = plot_shape_crop(),
                       indices = indices,
                       bands = bands,
-                      dap = dap,
+                      index_mask = index_mask,
+                      mask_above = mask_above,
+                      threshold = threshold,
+                      time = time,
                       plot_id = plot_id,
                       save_plots = save_plots,
                       save_shape = save_shape,

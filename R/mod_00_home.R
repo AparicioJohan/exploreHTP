@@ -37,7 +37,8 @@ mod_00_home_ui <- function(id) {
           ),
           tags$li(
             actionLink(inputId = ns("link_4"), label = strong("flexFitR:")),
-            "Non-linear regression models using flexFitR for model fitting.")
+            "Non-linear regression models using flexFitR for model fitting."
+          )
         ),
         hr(),
         h5("Start using the app by navigating to the modules from the navbar menu."),
@@ -58,8 +59,8 @@ mod_00_home_ui <- function(id) {
 #' 00_home Server Functions
 #'
 #' @noRd
-mod_00_home_server <- function(id){
-  moduleServer(id, function(input, output, session){
+mod_00_home_server <- function(id) {
+  moduleServer(id, function(input, output, session) {
     ns <- session$ns
     return(
       list(

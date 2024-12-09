@@ -5,7 +5,10 @@ auto_extract <- function(path_rgb = NULL,
                          plot_shape_crop,
                          indices = c("NGRDI", "BGI", "GLI"),
                          bands = c("Red", "Green", "Blue"),
-                         dap,
+                         index_mask = "HUE",
+                         mask_above = TRUE,
+                         threshold = NULL,
+                         time,
                          plot_id = NULL,
                          save_plots = FALSE,
                          save_shape = TRUE,
@@ -17,6 +20,9 @@ auto_extract <- function(path_rgb = NULL,
     stop("Missing argument 'path_rgb'")
   }
   path_rgb <- list.files(path_rgb, pattern = "\\.tif$", full.names = TRUE)
+  if (length(path_rgb) != length(time)) {
+    stop("Number of images should match length of time.")
+  }
   if (!is.null(path_dsm)) {
     path_dsm <- list.files(path_dsm, pattern = "\\.tif$", full.names = TRUE)
   }
@@ -39,7 +45,7 @@ auto_extract <- function(path_rgb = NULL,
     }
     # Save individual plots per date
     if (save_plots) {
-      path <- paste0(path_out, "/", name_experiment, "/plot/", dap[i], "/")
+      path <- paste0(path_out, "/", name_experiment, "/plot/", time[i], "/")
       create_folder_if_not_exists(path)
       crop_grid(
         mosaic = t1,
@@ -48,12 +54,22 @@ auto_extract <- function(path_rgb = NULL,
         output_dir = path
       )
     }
-    # Applying masking
+    # Detecting Soil
     message("Removing Soil")
-    t1_no_soil <- calc_mask(t1, index = "HUE", value = 0, crop_above = TRUE)
+    if (is.null(threshold)) {
+      t1_no_soil <- calc_mask_auto(t1, index = index_mask, above = mask_above)
+    } else {
+      threshold <- as.numeric(threshold)
+      t1_no_soil <- calc_mask(
+        mosaic = t1,
+        index = index_mask,
+        value = threshold,
+        crop_above = TRUE
+      )
+    }
     # Save individual plots per date no-soil
     if (save_plots) {
-      path <- paste0(path_out, "/", name_experiment, "/plot_hue/", dap[i], "/")
+      path <- paste0(path_out, "/", name_experiment, "/plot_mask/", time[i], "/")
       create_folder_if_not_exists(path)
       crop_grid(
         mosaic = t1_no_soil$new,
@@ -79,8 +95,8 @@ auto_extract <- function(path_rgb = NULL,
     t1_info_gli <- field_extract(t1_gli[["GLI"]], plot_shape = plot_shape)
     # Image Metadata
     tt[[i]] <- t1 |>
-      mos_info(name = paste0("rgb_", dap[i])) |>
-      mutate(DAP = dap[i], .before = image)
+      mosaic_info(name = paste0("rgb_", time[i])) |>
+      mutate(Time = time[i], .before = image)
     # Area Pixel
     area_pixel <- field_extract(
       mosaic = cellSize(t1_no_soil$new),
@@ -98,11 +114,11 @@ auto_extract <- function(path_rgb = NULL,
     )
     # Data
     dt_tmp <- t1_info |>
-      mutate(canopy = coverage[["AreaPercentage"]], .after = GLI_mean) |>
-      mutate(total_pixels = coverage[["PixelCount"]], .after = canopy) |>
-      mutate(DAP = dap[i], .before = all_of(plot_id)) |>
-      mutate(plot_area = plot_area, .after = canopy) |>
-      mutate(area_pixel = area_pixel[["area_mean"]], .after = canopy) |>
+      mutate(Time = time[i], .before = all_of(plot_id)) |>
+      mutate(canopy = coverage[["AreaPercentage"]]) |>
+      mutate(total_pixels = coverage[["PixelCount"]]) |>
+      mutate(plot_area = plot_area) |>
+      mutate(area_pixel = area_pixel[["area_mean"]]) |>
       mutate(GLI_2 = t1_info_gli[["GLI_mean"]], .after = GLI_mean)
     # Digital Surface Model (DSM)
     if (!is.null(path_dsm)) {
@@ -126,10 +142,10 @@ auto_extract <- function(path_rgb = NULL,
       }
       # Images info
       tt[[i]] <- rbind.data.frame(
-        mos_info(t1, name = paste("rgb", dap[i])),
-        mos_info(dsm_k, name = "dsm")
+        mosaic_info(t1, name = paste("rgb", time[i])),
+        mosaic_info(dsm_k, name = "dsm")
       ) |>
-        mutate(DAP = dap[i], .before = image)
+        mutate(Time = time[i], .before = image)
       # Canopy Height Model (CHM) and Canopy Volume Model (CVM)
       message("Canopy Height Model")
       chm <- calc_height(dsm_base, dsm_k)
@@ -144,11 +160,11 @@ auto_extract <- function(path_rgb = NULL,
       names(ph_vol)[names(ph_vol) == "volume_sum"] <- "volume"
       # Data
       dt_tmp <- ph_vol |>
-        mutate(canopy = coverage[["AreaPercentage"]], .after = volume) |>
-        mutate(total_pixel = coverage[["PixelCount"]], .after = canopy) |>
-        mutate(DAP = dap[i], .before = all_of(plot_id)) |>
-        mutate(plot_area = plot_area, .after = canopy) |>
-        mutate(area_pixel = area_pixel[["area_mean"]], .after = canopy) |>
+        mutate(Time = time[i], .before = all_of(plot_id)) |>
+        mutate(canopy = coverage[["AreaPercentage"]]) |>
+        mutate(total_pixel = coverage[["PixelCount"]]) |>
+        mutate(plot_area = plot_area) |>
+        mutate(area_pixel = area_pixel[["area_mean"]]) |>
         mutate(volume = total_pixel * area_pixel * ph) |>
         mutate(GLI_2 = t1_info_gli[["GLI_mean"]], .after = GLI_mean)
     }
@@ -161,7 +177,7 @@ auto_extract <- function(path_rgb = NULL,
       st_write(
         obj = dt_tmp,
         dsn = paste0(path, "shape_", name_experiment, ".gpkg"),
-        layer = dap[i],
+        layer = time[i],
         append = FALSE,
         quiet = TRUE
       )
@@ -173,7 +189,7 @@ auto_extract <- function(path_rgb = NULL,
     as.data.frame() |>
     dplyr::select(-geom) |>
     mutate_all(~ ifelse(is.nan(.), NA, .)) |>
-    mutate(trial = name_experiment, .before = DAP)
+    mutate(Trial = name_experiment, .before = Time)
   names(dt) <- gsub("_mean", "", names(dt))
   # Saving data
   path <- paste0(path_out, "/", name_experiment, "/extracted_data/")
@@ -217,7 +233,7 @@ auto_extract <- function(path_rgb = NULL,
       p1 <- plot_organizer(
         id = w,
         plot_id = plot_id,
-        path = paste0(path_out, "/", name_experiment, "/plot_hue/"),
+        path = paste0(path_out, "/", name_experiment, "/plot_mask/"),
         path_shape = path_shape,
         base_size = 14
       )
@@ -237,7 +253,7 @@ auto_extract <- function(path_rgb = NULL,
 }
 
 
-mos_info <- function(mosaic, name = "t1") {
+mosaic_info <- function(mosaic, name = "t1") {
   dm <- dim(mosaic)
   names(dm) <- c("nrow", "ncol", "nlyr")
   res <- res(mosaic)
@@ -334,13 +350,13 @@ plot_organizer <- function(id,
     df[[p]] <- mosaic |>
       as.data.frame(xy = TRUE) |>
       dplyr::select(x, y, Red, Green, Blue) |>
-      dplyr::mutate(DAP = i, Plot = id)
+      dplyr::mutate(Time = i, Plot = id)
     info[[p]] <- grid_shape
   }
   info <- sf::st_as_sf(do.call(what = rbind, args = info))
   df <- do.call(what = rbind, args = df) |>
     dplyr::filter(Red >= 0 & Blue >= 0 & Green >= 0) |>
-    dplyr::select(x, y, Red:Blue, DAP, Plot) |>
+    dplyr::select(x, y, Red:Blue, Time, Plot) |>
     na.omit()
   if (remove_border) {
     df <- df |>
@@ -367,7 +383,7 @@ plot_organizer <- function(id,
     scale_fill_identity() +
     geom_sf(data = info, color = color_grid, fill = NA) +
     theme_void(base_size = base_size) +
-    facet_wrap(Plot ~ DAP, nrow = 1, labeller = label_both) +
+    facet_wrap(Plot ~ Time, nrow = 1, labeller = label_both) +
     theme(strip.text = element_text(colour = color))
   out <- list(df = df, info = info, figure = p0)
   return(out)
@@ -561,14 +577,28 @@ calc_mask <- function(mosaic,
   return(out)
 }
 
+calc_mask_auto <- function(mosaic, index, above = TRUE) {
+  ind <- calc_index(mosaic = mosaic, index = index)
+  tr <- as.array(ind[[index]])[, , 1]
+  tr[is.nan(tr)] <- NA
+  tr[is.infinite(tr)] <- NA
+  tr <- otsu(tr, range = c(min(tr, na.rm = TRUE), max(tr, na.rm = TRUE)))
+  if (above) {
+    m <- ind[[index]] > tr
+  } else {
+    m <- ind[[index]] < tr
+  }
+  new <- terra::mask(mosaic, m, maskvalue = TRUE)
+  return(list(new = new, mask = m))
+}
 
 calc_height <- function(dsm_before, dsm_after) {
   if (!inherits(dsm_before, "SpatRaster") || !nlyr(dsm_before) ==
-      1 || terra::is.bool(dsm_before) || is.list(dsm_before)) {
+    1 || terra::is.bool(dsm_before) || is.list(dsm_before)) {
     stop("Error: Invalid 'dsm_before' raster object.")
   }
   if (!inherits(dsm_after, "SpatRaster") || !nlyr(dsm_after) ==
-      1 || terra::is.bool(dsm_after) || is.list(dsm_after)) {
+    1 || terra::is.bool(dsm_after) || is.list(dsm_after)) {
     stop("Error: Invalid 'dsm_after' raster object.")
   }
   dsm_ini <- resample(dsm_before, dsm_after)

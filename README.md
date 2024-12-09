@@ -28,6 +28,10 @@ autoextract::run_app()
 
 <img src='man/figures/Logo2.jpg' align="center"/>
 
+<br> <br>
+
+<img src='man/figures/desktop.png' align="center"/>
+
 ## About
 
 You are reading the doc about version : 0.0.1
@@ -36,16 +40,5 @@ This README has been compiled on the
 
 ``` r
 Sys.time()
-#> [1] "2024-12-04 21:44:33 CST"
-```
-
-Here are the tests results:
-
-``` r
-devtools::check(quiet = TRUE)
-#> ℹ Loading autoextract
-#> ── R CMD check results ────────────────────────────────── autoextract 0.0.1 ────
-#> Duration: 1m 51.2s
-#> 
-#> 0 errors ✔ | 0 warnings ✔ | 0 notes ✔
+#> [1] "2024-12-09 10:35:33 CST"
 ```

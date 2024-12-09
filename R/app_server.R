@@ -24,5 +24,6 @@ app_server <- function(input, output, session) {
 
   mod_01_grid_resize_server("01_grid_resize_1")
   mod_02_auto_extract_server("02_auto_extract_1")
-  mod_03_plot_visual_server("03_plot_visual_1")
+  mod_03_plot_visual_server("03_plot_visual_1", dark_mode = reactive(input$dark_mode))
+  mod_04_flexfitr_server("04_flexfitr_1", dark_mode = reactive(input$dark_mode))
 }

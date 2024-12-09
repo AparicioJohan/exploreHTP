@@ -230,8 +230,9 @@ mod_01_grid_resize_server <- function(id) {
       filename = function() {
         paste0(
           "shapefile_width_", input$x,
-          "_length_" , input$y,
-          "_angle_" , input$angle, ".gpkg")
+          "_length_", input$y,
+          "_angle_", input$angle, ".gpkg"
+        )
       },
       content = function(file) {
         st_write(simpleFeature_R(), file, quiet = TRUE)
