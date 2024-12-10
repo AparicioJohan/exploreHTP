@@ -24,6 +24,7 @@
 #' @importFrom utils write.csv read.csv
 #' @importFrom grDevices rgb
 #' @importFrom EBImage otsu
+#' @importFrom stats coef
 #' @importFrom DT renderDT datatable DTOutput
 run_app <- function(
     onStart = NULL,

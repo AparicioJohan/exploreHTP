@@ -79,7 +79,7 @@ mod_04_flexfitr_ui <- function(id) {
                 max = 6,
                 value = 1,
                 step = 1,
-                width = "80%"
+                width = "100%"
               )
             )
           )
@@ -127,7 +127,7 @@ mod_04_flexfitr_ui <- function(id) {
             inputId = ns("functions"),
             label = "Regression Function:",
             choices = list_funs(),
-            selected = c("fn_liner_sat"),
+            selected = c("fn_lin"),
             multiple = FALSE,
             width = "90%"
           ),
@@ -307,7 +307,7 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
         dplyr::mutate_if(is.numeric, round, 3)
       datatable(
         data = dt,
-        options = list(pageLength = 5, autoWidth = TRUE),
+        options = list(pageLength = 5, autoWidth = FALSE),
         filter = "top"
       )
     })
@@ -398,7 +398,11 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
                   fixed_params <- NULL
                   method <- input$methods
                   subset <- input$uid
-                  options <- flexFitR:::modeler.options()
+                  options <- list(
+                    parallel = input$parallel,
+                    workers = input$n_cores,
+                    return_method = TRUE
+                  )
                   control <- list()
                   output_model({
                     suppressWarnings(
@@ -451,9 +455,48 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
     )
 
     # plot time series
-    output$plot_serie <- renderPlotly({
+    output$plot_serie <- renderPlot(
+      {
+        req(output_model())
+        req(input$uid_plot)
+        req(input$n_points_deriv)
+        if (!req(input$uid_plot) %in% output_model()[["param"]]$uid) {
+          return()
+        }
+        common <- if (dark_mode() == "dark") "white" else "#1D1F21"
+        obj <- plot(
+          x = output_model(),
+          id = input$uid_plot,
+          type = input$type_plot,
+          color = "#007bc2",
+          color_points = common,
+          title = paste("Group:", input$uid_plot),
+          base_size = 18,
+          n_points = input$n_points_deriv,
+          color_ci = common,
+          color_pi = "red"
+        ) +
+          theme(
+            panel.background = element_rect(fill = "transparent", color = NA),
+            plot.background = element_rect(fill = "transparent", color = NA),
+            plot.title = element_text(colour = common),
+            axis.title.x = element_text(colour = common),
+            axis.text.x = element_text(colour = common),
+            axis.title.y = element_text(colour = common),
+            axis.text.y = element_text(colour = common),
+            strip.text = element_text(colour = common)
+          )
+        print(obj)
+      },
+      bg = "transparent"
+    )
+
+
+    # plot time series interactive
+    output$plot_serie_int <- renderPlotly({
       req(output_model())
       req(input$uid_plot)
+      req(input$n_points_deriv)
       if (!req(input$uid_plot) %in% output_model()[["param"]]$uid) {
         return()
       }
@@ -461,10 +504,13 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
       obj <- plot(
         x = output_model(),
         id = input$uid_plot,
-        type = 1,
+        type = input$type_plot,
         color = "#007bc2",
         color_points = common,
-        title = paste("Group:", input$uid_plot)
+        title = paste("Group:", input$uid_plot),
+        n_points = input$n_points_deriv,
+        color_ci = common,
+        color_pi = "red"
       ) +
         theme(
           plot.title = element_text(colour = common),
@@ -503,9 +549,10 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
         dplyr::mutate_if(is.numeric, round, 3)
       datatable(
         data = dt,
-        options = list(pageLength = 5, autoWidth = TRUE),
+        options = list(pageLength = 5, autoWidth = FALSE),
         filter = "top",
-        fillContainer = TRUE
+        fillContainer = TRUE,
+        rownames = FALSE
       )
     })
 
@@ -516,9 +563,10 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
         dplyr::mutate_if(is.numeric, round, 3)
       datatable(
         data = dt,
-        options = list(pageLength = 5, autoWidth = TRUE),
+        options = list(pageLength = 5, autoWidth = FALSE),
         filter = "top",
-        fillContainer = TRUE
+        fillContainer = TRUE,
+        rownames = FALSE
       )
     })
 
@@ -529,9 +577,35 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
         dplyr::mutate_if(is.numeric, round, 3)
       datatable(
         data = dt,
-        options = list(pageLength = 5, autoWidth = TRUE),
+        options = list(pageLength = 5, autoWidth = FALSE),
         filter = "top",
-        fillContainer = TRUE
+        fillContainer = TRUE,
+        rownames = FALSE
+      )
+    })
+
+    # Coefficients Table
+    output$auc_table <- renderDT({
+      req(output_model())
+      req(input$auc_range)
+      req(input$n_points)
+      x <- as.numeric(unlist(strsplit(input$auc_range, ",\\s*")))
+      if (length(x) <= 1 | length(x) > 2) {
+        return(NULL)
+      }
+      dt <- predict(
+        object = output_model(),
+        x = x,
+        type = "auc",
+        n_points = input$n_points
+      ) |>
+        dplyr::mutate_if(is.numeric, round, 3)
+      datatable(
+        data = dt,
+        options = list(pageLength = 5, autoWidth = FALSE),
+        filter = "top",
+        fillContainer = TRUE,
+        rownames = FALSE
       )
     })
 
@@ -567,11 +641,13 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
     # UI for plotting results
     output$ui_plot <- renderUI({
       req(output_model())
+      limit_inf <- min(output_model()$dt$x, na.rm = TRUE)
+      limit_sup <- max(output_model()$dt$x, na.rm = TRUE)
       layout_column_wrap(
         width = 1 / 2,
         card(
           full_screen = TRUE,
-          card_header("Time Serie"),
+          card_header(tagList(icon = icon("chart-line"), "Time Serie")),
           layout_sidebar(
             fillable = TRUE,
             sidebar = sidebar(
@@ -590,25 +666,92 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
                   liveSearch = TRUE
                 ),
                 width = "100%"
+              ),
+              checkboxInput(
+                inputId = ns("interactive"),
+                label = "Interactive?",
+                value = TRUE,
+                width = "80%"
+              ),
+              numericInput(
+                inputId = ns("n_points_deriv"),
+                label = "Number of Points:",
+                min = 1,
+                max = 2000,
+                value = 100,
+                step = 1,
+                width = "100%"
+              ),
+              shinyWidgets::prettyRadioButtons(
+                inputId = ns("type_plot"),
+                label = NULL,
+                selected = 1,
+                inline = FALSE,
+                status = "primary",
+                fill = TRUE,
+                icon = icon("check"),
+                choiceNames = c(
+                  "Fitted Curve",
+                  "CI's",
+                  "1st Derivative",
+                  "2nd Derivative"
+                ),
+                choiceValues = c(1, 4, 5, 6)
               )
             ),
-            plotlyOutput(ns("plot_serie"))
+            conditionalPanel(
+              condition = "input.interactive == true",
+              ns = ns,
+              plotlyOutput(ns("plot_serie_int"))
+            ),
+            conditionalPanel(
+              condition = "input.interactive == false",
+              ns = ns,
+              plotOutput(ns("plot_serie"))
+            )
           )
         ),
         navset_card_tab(
           full_screen = TRUE,
-          title = "Tables",
+          title = tagList(icon = icon("bars"), "Tables"),
           nav_panel(
             "Results",
             card_body(DTOutput(ns("results_table")))
           ),
           nav_panel(
-            "Coefficients",
+            "Coef",
             card_body(DTOutput(ns("coef_table")))
           ),
           nav_panel(
             "Metrics",
             card_body(DTOutput(ns("metrics_table")))
+          ),
+          nav_panel(
+            "AUC",
+            layout_sidebar(
+              fillable = TRUE,
+              sidebar = sidebar(
+                position = "right",
+                width = 220,
+                open = "closed",
+                numericInput(
+                  inputId = ns("n_points"),
+                  label = "Number of Points:",
+                  min = 1,
+                  max = 2000,
+                  value = 100,
+                  step = 1,
+                  width = "100%"
+                ),
+                textInput(
+                  inputId = ns("auc_range"),
+                  label = "Interval",
+                  value = paste0(limit_inf, ", ", limit_sup),
+                  width = "100%"
+                )
+              ),
+              DTOutput(ns("auc_table"))
+            )
           )
         )
       )

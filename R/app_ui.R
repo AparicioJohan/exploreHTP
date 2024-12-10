@@ -18,7 +18,7 @@ app_ui <- function(request) {
         #   class = "me-3",
         #   alt = "Condor-Sky logo"
         # ),
-        "Image analyzer"
+        "Image Analyzer"
       ),
       theme = bs_theme(preset = "shiny", version = 5),
       collapsible = TRUE,

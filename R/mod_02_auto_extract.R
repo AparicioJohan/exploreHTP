@@ -98,14 +98,13 @@ mod_02_auto_extract_ui <- function(id) {
               inputId = ns("plot_shape"),
               label = "Grid Shapefile (.gpkg)",
               accept = c(".gpkg"),
-              width = "90%"
+              width = "70%"
             ),
-            shinyWidgets::actionBttn(
+            actionButton(
               inputId = ns("view_shape"),
-              label = NULL,
-              style = "unite",
               icon = icon("eye"),
-              color = "primary"
+              label = NULL,
+              class = "btn-primary"
             )
           ),
           checkboxInput(

@@ -14,7 +14,7 @@ Imports:
     DT,
     EBImage,
     exactextractr,
-    flexFitR,
+    flexFitR (>= 0.1.0),
     ggplot2,
     golem,
     leaflet,
@@ -39,3 +39,5 @@ Suggests:
 Config/testthat/edition: 3
 Depends: 
     R (>= 2.10)
+Remotes:  
+    AparicioJohan/autoextract

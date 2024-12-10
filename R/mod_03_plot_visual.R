@@ -56,19 +56,19 @@ mod_03_plot_visual_ui <- function(id) {
             inputId = ns("plot_shape"),
             label = "Output Shapefile (.gpkg)",
             accept = c(".gpkg"),
-            width = "80%"
+            width = "90%"
           ),
           selectInput(
             inputId = ns("plot_id"),
-            label = "Plot Column:",
+            label = "ID Column:",
             choices = NULL,
-            width = "80%"
+            width = "90%"
           ),
           selectizeInput(
             inputId = ns("uid"),
-            label = "Select Plot ID:",
+            label = "Select ID:",
             choices = NULL,
-            width = "80%"
+            width = "90%"
           )
         ),
         column(
@@ -79,7 +79,7 @@ mod_03_plot_visual_ui <- function(id) {
             label = "Select Plot Directory",
             title = "Choose any folder",
             icon = icon("magnifying-glass"),
-            style = "width: 80%"
+            style = "width: 90%"
           ),
           textOutput(ns("dirPathPlot")),
           br(),
@@ -90,7 +90,7 @@ mod_03_plot_visual_ui <- function(id) {
             max = 30,
             value = 18,
             step = 1,
-            width = "80%"
+            width = "90%"
           )
         ),
         column(
@@ -102,7 +102,7 @@ mod_03_plot_visual_ui <- function(id) {
             max = 180,
             value = 0,
             step = 0.5,
-            width = "80%"
+            width = "90%"
           ),
           checkboxInput(
             inputId = ns("apply_angle"),

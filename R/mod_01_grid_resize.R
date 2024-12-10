@@ -18,13 +18,13 @@ mod_01_grid_resize_ui <- function(id) {
           inputId = ns("shapefile"),
           label = "Choose a Simple Feature (.gpkg) File",
           accept = c(".gpkg"),
-          width = "80%"
+          width = "90%"
         ),
         fileInput(
           inputId = ns("rasterFile"),
           label = "Choose a .tif Raster File (Optional)",
           accept = ".tif",
-          width = "80%"
+          width = "90%"
         )
       ),
       column(
@@ -36,7 +36,7 @@ mod_01_grid_resize_ui <- function(id) {
           max = 6,
           value = 0.8,
           step = 0.1,
-          width = "80%"
+          width = "90%"
         ),
         numericInput(
           inputId = ns("y"),
@@ -45,7 +45,7 @@ mod_01_grid_resize_ui <- function(id) {
           max = 8,
           value = 6,
           step = 0.1,
-          width = "80%"
+          width = "90%"
         )
       ),
       column(
@@ -57,19 +57,19 @@ mod_01_grid_resize_ui <- function(id) {
           max = 180,
           value = 0,
           step = 0.5,
-          width = "80%"
+          width = "90%"
         ),
         checkboxInput(
           inputId = ns("interactive"),
           label = "Interactive?",
           value = FALSE,
-          width = "80%"
+          width = "90%"
         ),
         downloadButton(ns("download"))
       )
     ),
-    hr(),
     fluidRow(
+      # hr(),
       column(
         width = 12,
         conditionalPanel(
@@ -235,7 +235,7 @@ mod_01_grid_resize_server <- function(id) {
         )
       },
       content = function(file) {
-        st_write(simpleFeature_R(), file, quiet = TRUE)
+        st_write(req(simpleFeature_R()), file, quiet = TRUE)
       }
     )
   })
