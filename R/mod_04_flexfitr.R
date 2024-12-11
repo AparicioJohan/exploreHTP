@@ -463,14 +463,17 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
         if (!req(input$uid_plot) %in% output_model()[["param"]]$uid) {
           return()
         }
+        all_uis <- output_model()[["param"]]$uid
         common <- if (dark_mode() == "dark") "white" else "#1D1F21"
+        ids <- if (input$type_plot == 3) all_uis else input$uid_plot
+        label <- if (input$type_plot == 3) "ALL" else input$uid_plot
         obj <- plot(
           x = output_model(),
-          id = input$uid_plot,
+          id = ids,
           type = input$type_plot,
           color = "#007bc2",
           color_points = common,
-          title = paste("Group:", input$uid_plot),
+          title = paste("Group:", label),
           base_size = 18,
           n_points = input$n_points_deriv,
           color_ci = common,
@@ -484,7 +487,8 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
             axis.text.x = element_text(colour = common),
             axis.title.y = element_text(colour = common),
             axis.text.y = element_text(colour = common),
-            strip.text = element_text(colour = common)
+            strip.text = element_text(colour = common),
+            legend.position = "none"
           )
         print(obj)
       },
@@ -500,14 +504,17 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
       if (!req(input$uid_plot) %in% output_model()[["param"]]$uid) {
         return()
       }
+      all_uis <- output_model()[["param"]]$uid
       common <- if (dark_mode() == "dark") "white" else "#1D1F21"
+      ids <- if (input$type_plot == 3) all_uis else input$uid_plot
+      label <- if (input$type_plot == 3) "ALL" else input$uid_plot
       obj <- plot(
         x = output_model(),
-        id = input$uid_plot,
+        id = ids,
         type = input$type_plot,
         color = "#007bc2",
         color_points = common,
-        title = paste("Group:", input$uid_plot),
+        title = paste("Group:", label),
         n_points = input$n_points_deriv,
         color_ci = common,
         color_pi = "red"
@@ -518,7 +525,8 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
           axis.text.x = element_text(colour = common),
           axis.title.y = element_text(colour = common),
           axis.text.y = element_text(colour = common),
-          strip.text = element_text(colour = common)
+          strip.text = element_text(colour = common),
+          legend.position = "none"
         )
       plotly::ggplotly(obj) |>
         plotly::config(displayModeBar = FALSE) |>
@@ -694,9 +702,10 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
                   "Fitted Curve",
                   "CI's",
                   "1st Derivative",
-                  "2nd Derivative"
+                  "2nd Derivative",
+                  "All Groups"
                 ),
-                choiceValues = c(1, 4, 5, 6)
+                choiceValues = c(1, 4, 5, 6, 3)
               )
             ),
             conditionalPanel(
