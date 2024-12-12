@@ -107,7 +107,7 @@ auto_extract <- function(path_rgb = NULL,
     plot_area <- st_area(plot_shape)
     # Canopy
     message("Canopy Cover")
-    coverage <- field_area(
+    coverage <- calc_area(
       mosaic = t1_no_soil$new,
       field_shape = plot_shape,
       field = plot_id
@@ -438,7 +438,7 @@ field_extract <- function(mosaic,
 }
 
 
-field_area <- function(mosaic, field_shape, field = NULL) {
+calc_area <- function(mosaic, field_shape, field = NULL) {
   if (is.null(field)) {
     terra_vect <- vect(field_shape)
     terra_rast <- rasterize(terra_vect, mosaic, field = "PlotID")

@@ -273,7 +273,7 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
       args <- try(expr = names(formals(fn))[-1], silent = TRUE)
       tagList(
         textInput(
-          inputId = ns("inital_values"),
+          inputId = ns("initial_values"),
           label = strong("Starting Values:"),
           value = paste(rep(0.1, length(args)), collapse = ", "),
           width = "100%"
@@ -283,7 +283,12 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
           strong("Parameters:"),
           em(paste0(args, collapse = ", "))
         ),
-        hr(),
+        actionButton(
+          inputId = ns("view_fun"),
+          icon = icon("eye"),
+          label = "View",
+          width = "100%"
+        ),
         textInput(
           inputId = ns("upper_limit"),
           label = "Upper Limit (Optional):",
@@ -299,6 +304,91 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
       )
     }) |>
       bindEvent(input$functions, dt_reactive())
+
+    # Modal Functions
+    observeEvent(input$view_fun, {
+      req(input$functions)
+      fn <- input$functions
+      args <- try(expr = names(formals(fn))[-1], silent = TRUE)
+      showModal(modalDialog(
+        title = tagList(icon = icon("chart-line"), "View Functions"),
+        size = "l",
+        easyClose = TRUE,
+        footer = NULL,
+        textInput(
+          inputId = ns("values_play"),
+          label = strong("Values:"),
+          value = paste(rep(0.1, length(args)), collapse = ", "),
+          width = "100%"
+        ),
+        tags$div(
+          style = "display: flex; align-items: center; gap: 10px;",
+          strong("Parameters:"),
+          em(paste0(args, collapse = ", "))
+        ),
+        br(),
+        plotlyOutput(ns("plot_play")),
+        shinyWidgets::materialSwitch(
+          inputId = ns("see_code"),
+          label = "See Code?",
+          value = FALSE,
+          status = "primary",
+          right = TRUE
+        ),
+        conditionalPanel(
+          ns = ns,
+          condition = "input.see_code == true",
+          verbatimTextOutput(ns("functionPrint"))
+        )
+      ))
+    })
+
+    output$functionPrint <- renderPrint({
+      req(input$functions)
+      eval(parse(text = input$functions))
+    })
+
+    output$plot_play <- renderPlotly(
+      {
+        req(input$functions)
+        req(input$values_play)
+        fn <- input$functions
+        args <- names(formals(fn))[-1]
+        parameters <- unlist(strsplit(input$values_play, ",\\s*"))
+        parameters <- na.omit(as.numeric(parameters))
+        if (length(parameters) != length(args)) return()
+        names(parameters) <- names(formals(fn))[-1]
+        common <- if (dark_mode() == "dark") "white" else "#1D1F21"
+        obj <- plot_fn(
+          fn = fn,
+          params = parameters,
+          interval = c(0, 100),
+          n_points = 1000,
+          base_size = 14,
+          color = "#007bc2",
+          label_color = common
+        ) +
+          theme(
+            panel.background = element_rect(fill = "transparent", color = NA),
+            plot.background = element_rect(fill = "transparent", color = NA),
+            plot.title = element_text(colour = common),
+            axis.title.x = element_text(colour = common),
+            axis.text.x = element_text(colour = common),
+            axis.title.y = element_text(colour = common),
+            axis.text.y = element_text(colour = common),
+            strip.text = element_text(colour = common),
+            legend.position = "none"
+          ) +
+          ggtitle(label = paste("Function:", input$functions))
+        plotly::ggplotly(obj) |>
+          plotly::config(displayModeBar = FALSE) |>
+          plotly::layout(
+            font = list(family = "Open Sans", color = common),
+            plot_bgcolor = "transparent",
+            paper_bgcolor = "transparent"
+          )
+      })
+
 
     # Modal Data
     output$data_table <- renderDT({
@@ -317,6 +407,7 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
         title = tagList(icon = icon("table-cells"), "View Data"),
         size = "l",
         easyClose = TRUE,
+        footer = NULL,
         DTOutput(ns("data_table"))
       ))
     })
@@ -341,7 +432,7 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
     observeEvent(input$submit,
       {
         req(dt_reactive())
-        req(input$inital_values)
+        req(input$initial_values)
         shinyalert(
           title = "Are you sure?",
           text = "Do you want to proceed with this action?",
@@ -388,7 +479,7 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
                   grp <- input$group
                   keep <- input$metadata
                   fn <- input$functions
-                  parameters <- unlist(strsplit(input$inital_values, ",\\s*"))
+                  parameters <- unlist(strsplit(input$initial_values, ",\\s*"))
                   parameters <- as.numeric(parameters)
                   names(parameters) <- names(formals(fn))[-1]
                   lower <- unlist(strsplit(input$lower_limit, ",\\s*"))
