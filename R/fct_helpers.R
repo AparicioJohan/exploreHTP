@@ -1,3 +1,45 @@
+multi_save <- function(x,
+                       path = NULL,
+                       type = 1,
+                       color = "#007bc2",
+                       color_points = "black",
+                       base_size = 16,
+                       n_points = 100,
+                       color_ci = "black",
+                       color_pi = "red",
+                       width = 8,
+                       height = 6,
+                       file_type = "png") {
+  create_folder_if_not_exists(path = paste0(path, "/groups/"))
+  ids <- x[["param"]]$uid
+  for (j in ids) {
+    tmp <- plot(
+      x = x,
+      id = j,
+      type = type,
+      color = color,
+      color_points = color_points,
+      title = paste("Group:", j),
+      n_points = n_points,
+      base_size = base_size,
+      color_ci = color_ci,
+      color_pi = color_pi
+    )
+    ggsave(
+      filename = paste0(path, "/groups/ID_", j, ".", file_type),
+      plot = tmp,
+      units = "in",
+      dpi = 300,
+      width = width,
+      height = height
+    ) |> suppressWarnings()
+  }
+}
+
+
+
+
+
 resize <- function(plot_shape, mosaic, angle = 0, xsize = 0.8, ysize = 4) {
   # Changing dimensions of the shape
   cen <- st_geometry(plot_shape)

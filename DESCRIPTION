@@ -19,6 +19,7 @@ Imports:
     golem,
     leaflet,
     mapview,
+    openxlsx,
     plotly,
     sf,
     shiny,
@@ -39,5 +40,5 @@ Suggests:
 Config/testthat/edition: 3
 Depends: 
     R (>= 2.10)
-Remotes:  
+Remotes: 
     AparicioJohan/autoextract

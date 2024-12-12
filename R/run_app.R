@@ -17,6 +17,7 @@
 #' @import exactextractr
 #' @import ggplot2
 #' @import waiter
+#' @import openxlsx
 #' @import flexFitR
 #' @importFrom plotly plot_ly plotlyOutput renderPlotly
 #' @importFrom dplyr mutate select mutate_all rename filter all_of across

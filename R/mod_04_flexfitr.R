@@ -82,6 +82,50 @@ mod_04_flexfitr_ui <- function(id) {
                 width = "100%"
               )
             )
+          ),
+          accordion_panel(
+            "Downloads",
+            icon = icon("download"),
+            open = TRUE,
+            helpText("Tables"),
+            downloadButton(ns("downloadExcel"), "Download Excel"),
+            helpText("Images"),
+            shinyDirButton(
+              id = ns("directory_img"),
+              label = "Select Directory",
+              title = "Choose a folder for images",
+              icon = icon("magnifying-glass")
+            ),
+            textOutput(ns("dirPathImg")),
+            shinyWidgets::radioGroupButtons(
+              inputId = ns("file_type"),
+              label = helpText("Save As:"),
+              choices = c("svg", "png"),
+              selected = "png",
+              size = "sm",
+              checkIcon = list(yes = icon("ok", lib = "glyphicon"))
+            ),
+            sliderInput(
+              inputId = ns("width"),
+              label = helpText("Width"),
+              min = 2,
+              max = 15,
+              value = 10,
+              step = 1
+            ),
+            sliderInput(
+              inputId = ns("height"),
+              label = helpText("Height"),
+              min = 2,
+              max = 15,
+              value = 6,
+              step = 1
+            ),
+            actionButton(
+              inputId = ns("download_img"),
+              label = "Download",
+              icon = icon("download")
+            )
           )
         )
       ),
@@ -187,8 +231,10 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    path_img <- reactiveVal()
     output_model <- reactiveVal()
     uid_active <- reactiveVal()
+    tables_list <- reactiveValues()
 
     # Plot Shape
     dt_reactive <- reactive({
@@ -348,46 +394,47 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
       eval(parse(text = input$functions))
     })
 
-    output$plot_play <- renderPlotly(
-      {
-        req(input$functions)
-        req(input$values_play)
-        fn <- input$functions
-        args <- names(formals(fn))[-1]
-        parameters <- unlist(strsplit(input$values_play, ",\\s*"))
-        parameters <- na.omit(as.numeric(parameters))
-        if (length(parameters) != length(args)) return()
-        names(parameters) <- names(formals(fn))[-1]
-        common <- if (dark_mode() == "dark") "white" else "#1D1F21"
-        obj <- plot_fn(
-          fn = fn,
-          params = parameters,
-          interval = c(0, 100),
-          n_points = 1000,
-          base_size = 14,
-          color = "#007bc2",
-          label_color = common
+    output$plot_play <- renderPlotly({
+      req(input$functions)
+      req(input$values_play)
+      fn <- input$functions
+      args <- names(formals(fn))[-1]
+      parameters <- unlist(strsplit(input$values_play, ",\\s*"))
+      parameters <- na.omit(as.numeric(parameters))
+      if (length(parameters) != length(args)) {
+        return()
+      }
+      names(parameters) <- names(formals(fn))[-1]
+      common <- if (dark_mode() == "dark") "white" else "#1D1F21"
+      obj <- plot_fn(
+        fn = fn,
+        params = parameters,
+        interval = c(0, 100),
+        n_points = 1000,
+        base_size = 14,
+        color = "#007bc2",
+        label_color = common
+      ) +
+        theme(
+          panel.background = element_rect(fill = "transparent", color = NA),
+          plot.background = element_rect(fill = "transparent", color = NA),
+          plot.title = element_text(colour = common),
+          axis.title.x = element_text(colour = common),
+          axis.text.x = element_text(colour = common),
+          axis.title.y = element_text(colour = common),
+          axis.text.y = element_text(colour = common),
+          strip.text = element_text(colour = common),
+          legend.position = "none"
         ) +
-          theme(
-            panel.background = element_rect(fill = "transparent", color = NA),
-            plot.background = element_rect(fill = "transparent", color = NA),
-            plot.title = element_text(colour = common),
-            axis.title.x = element_text(colour = common),
-            axis.text.x = element_text(colour = common),
-            axis.title.y = element_text(colour = common),
-            axis.text.y = element_text(colour = common),
-            strip.text = element_text(colour = common),
-            legend.position = "none"
-          ) +
-          ggtitle(label = paste("Function:", input$functions))
-        plotly::ggplotly(obj) |>
-          plotly::config(displayModeBar = FALSE) |>
-          plotly::layout(
-            font = list(family = "Open Sans", color = common),
-            plot_bgcolor = "transparent",
-            paper_bgcolor = "transparent"
-          )
-      })
+        ggtitle(label = paste("Function:", input$functions))
+      plotly::ggplotly(obj) |>
+        plotly::config(displayModeBar = FALSE) |>
+        plotly::layout(
+          font = list(family = "Open Sans", color = common),
+          plot_bgcolor = "transparent",
+          paper_bgcolor = "transparent"
+        )
+    })
 
 
     # Modal Data
@@ -550,7 +597,8 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
       {
         req(output_model())
         req(input$uid_plot)
-        req(input$n_points_deriv)
+        req(input$n_points_inter)
+        if (input$uid_plot == "") return()
         if (!req(input$uid_plot) %in% output_model()[["param"]]$uid) {
           return()
         }
@@ -566,7 +614,7 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
           color_points = common,
           title = paste("Group:", label),
           base_size = 18,
-          n_points = input$n_points_deriv,
+          n_points = input$n_points_inter,
           color_ci = common,
           color_pi = "red"
         ) +
@@ -591,7 +639,8 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
     output$plot_serie_int <- renderPlotly({
       req(output_model())
       req(input$uid_plot)
-      req(input$n_points_deriv)
+      req(input$n_points_inter)
+      if (input$uid_plot == "") return()
       if (!req(input$uid_plot) %in% output_model()[["param"]]$uid) {
         return()
       }
@@ -606,7 +655,7 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
         color = "#007bc2",
         color_points = common,
         title = paste("Group:", label),
-        n_points = input$n_points_deriv,
+        n_points = input$n_points_inter,
         color_ci = common,
         color_pi = "red"
       ) +
@@ -644,7 +693,9 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
     # results Table
     output$results_table <- renderDT({
       req(output_model())
-      dt <- output_model()[["param"]] |>
+      params <- output_model()[["param"]]
+      tables_list$params <- params
+      dt <- params |>
         dplyr::mutate_if(is.numeric, round, 3)
       datatable(
         data = dt,
@@ -658,7 +709,9 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
     # Metrics Table
     output$metrics_table <- renderDT({
       req(output_model())
-      dt <- metrics(output_model()) |>
+      metrics_table <- metrics(output_model())
+      tables_list$metrics <- metrics_table
+      dt <- metrics_table |>
         dplyr::mutate_if(is.numeric, round, 3)
       datatable(
         data = dt,
@@ -672,7 +725,9 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
     # Coefficients Table
     output$coef_table <- renderDT({
       req(output_model())
-      dt <- coef(output_model()) |>
+      coef_table <- coef(output_model())
+      tables_list$coef <- coef_table
+      dt <- coef_table |>
         dplyr::mutate_if(is.numeric, round, 3)
       datatable(
         data = dt,
@@ -683,7 +738,7 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
       )
     })
 
-    # Coefficients Table
+    # AUC Table
     output$auc_table <- renderDT({
       req(output_model())
       req(input$auc_range)
@@ -692,12 +747,14 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
       if (length(x) <= 1 | length(x) > 2) {
         return(NULL)
       }
-      dt <- predict(
+      auc_data <- predict(
         object = output_model(),
         x = x,
         type = "auc",
         n_points = input$n_points
-      ) |>
+      )
+      tables_list$auc <- auc_data
+      dt <- auc_data |>
         dplyr::mutate_if(is.numeric, round, 3)
       datatable(
         data = dt,
@@ -721,6 +778,7 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
         title = tagList(icon = icon("list"), "Summary"),
         size = "l",
         easyClose = TRUE,
+        footer = NULL,
         verbatimTextOutput(outputId = ns("summ_model"))
       ))
     })
@@ -729,7 +787,7 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
       req(output_model())
       out <- output_model()
       values <- unique(output_model()[["param"]]$uid)
-      shinyWidgets::updatePickerInput(
+      updateSelectInput(
         session = session,
         inputId = "uid_plot",
         choices = values,
@@ -753,19 +811,26 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
               position = "right",
               width = 220,
               open = "closed",
-              shinyWidgets::pickerInput(
+              selectInput(
                 inputId = ns("uid_plot"),
                 label = "Group:",
                 choices = NULL,
                 multiple = FALSE,
-                options = shinyWidgets::pickerOptions(
-                  container = "body",
-                  actionsBox = TRUE,
-                  size = 5,
-                  liveSearch = TRUE
-                ),
                 width = "100%"
               ),
+              # shinyWidgets::pickerInput(
+              #   inputId = ns("uid_plot"),
+              #   label = "Group:",
+              #   choices = NULL,
+              #   multiple = FALSE,
+              #   options = shinyWidgets::pickerOptions(
+              #     container = "body",
+              #     actionsBox = TRUE,
+              #     size = 5,
+              #     liveSearch = TRUE
+              #   ),
+              #   width = "100%"
+              # ),
               checkboxInput(
                 inputId = ns("interactive"),
                 label = "Interactive?",
@@ -773,7 +838,7 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
                 width = "80%"
               ),
               numericInput(
-                inputId = ns("n_points_deriv"),
+                inputId = ns("n_points_inter"),
                 label = "Number of Points:",
                 min = 1,
                 max = 2000,
@@ -855,6 +920,81 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
           )
         )
       )
+    })
+
+    # Download Excel Files
+    output$downloadExcel <- downloadHandler(
+      filename = function() {
+        paste("multi_sheet_data", Sys.Date(), ".xlsx", sep = "")
+      },
+      content = function(file) {
+        # Create a new workbook
+        req(output_model())
+        req(tables_list$params)
+        req(tables_list$coef)
+        req(tables_list$metrics)
+        req(tables_list$auc)
+        wb <- createWorkbook()
+        # Add sheets and data
+        addWorksheet(wb, "parameters")
+        writeData(wb, "parameters", tables_list$params)
+        addWorksheet(wb, "coefficients")
+        writeData(wb, "coefficients", tables_list$coef)
+        addWorksheet(wb, "metrics")
+        writeData(wb, "metrics", tables_list$metrics)
+        addWorksheet(wb, "auc")
+        writeData(wb, "auc", tables_list$auc)
+        # Save the workbook to the specified file
+        saveWorkbook(wb, file, overwrite = TRUE)
+      }
+    )
+
+    # Download Images
+    roots <- getVolumes()()
+    shinyDirChoose(input, "directory_img", roots = roots, session = session)
+
+    observeEvent(input$directory_img,
+      {
+        path_img(parseDirPath(roots, input$directory_img))
+      },
+      ignoreInit = TRUE
+    )
+
+    output$dirPathImg <- renderText({
+      path_img()
+    })
+
+
+    observeEvent(input$download_img, {
+      req(output_model())
+      req(path_img())
+      req(input$n_points_inter)
+      w$show()
+      multi_save(
+        x = output_model(),
+        path = path_img(),
+        type = 1,
+        color = "#007bc2",
+        color_points = "black",
+        base_size = 16,
+        n_points = input$n_points_inter,
+        color_ci = "black",
+        color_pi = "red",
+        width = input$width,
+        height = input$height,
+        file_type = input$file_type
+      )
+      shinytoastr::toastr_info(
+        title = "Outputs!",
+        message = paste0(
+          "Your files were saved in here: \n \n", path_img(), "/groups/"
+        ),
+        closeButton = TRUE,
+        position = "bottom-right",
+        showMethod = "slideDown",
+        timeOut = 0
+      )
+      w$hide()
     })
   })
 }
