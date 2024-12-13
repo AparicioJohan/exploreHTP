@@ -13,7 +13,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# `{autoextract}`
+# `{exploreHTP}`
 
 <!-- badges: start -->
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
@@ -21,11 +21,11 @@ knitr::opts_chunk$set(
 
 ## Installation
 
-You can install the development version of `{autoextract}` like so:
+You can install the development version of `{exploreHTP}` like so:
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("AparicioJohan/autoextract")
+devtools::install_github("AparicioJohan/exploreHTP")
 ```
 
 ## Run
@@ -33,7 +33,7 @@ devtools::install_github("AparicioJohan/autoextract")
 You can launch the application by running:
 
 ```{r, eval = FALSE}
-autoextract::run_app()
+exploreHTP::run_app()
 ```
 
 <img src='man/figures/Logo2.jpg' align="center"/>

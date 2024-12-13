@@ -24,12 +24,12 @@ mod_00_home_ui <- function(id) {
         h4("Explore the following modules:"),
         tags$ol(
           tags$li(
-            actionLink(inputId = ns("link_1"), label = strong("Autoextract:")),
+            actionLink(inputId = ns("link_1"), label = strong("exploreHTP:")),
             "extract plot-level information by providing a grid shape file and the image paths."
           ),
           tags$li(
             actionLink(inputId = ns("link_2"), label = strong("Visualizer:")),
-            "visualize plot time series from cropped images generated in Autoextract."
+            "visualize plot time series from cropped images generated in exploreHTP."
           ),
           tags$li(
             actionLink(inputId = ns("link_3"), label = strong("Resizer:")),

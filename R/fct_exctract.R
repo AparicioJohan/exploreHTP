@@ -479,7 +479,7 @@ calc_index <- function(mosaic,
                        rededge = NULL,
                        nir = NULL,
                        index = "HUE") {
-  catalog <- autoextract::indices
+  catalog <- exploreHTP::indices
   num_band <- nlyr(mosaic)
   if (num_band < 3) {
     stop("At least 3 bands (RGB) are necessary to calculate indices")

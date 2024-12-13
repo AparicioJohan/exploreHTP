@@ -10,7 +10,7 @@ app_server <- function(input, output, session) {
   selector <- mod_00_home_server("00_home_1")
 
   observeEvent(selector$link_1(), {
-    nav_select(id = "main_navbar", session, selected = "Autoextract")
+    nav_select(id = "main_navbar", session, selected = "exploreHTP")
   })
   observeEvent(selector$link_2(), {
     nav_select(id = "main_navbar", session, selected = "Visualizer")

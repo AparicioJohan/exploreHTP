@@ -1,3 +1,3 @@
-# autoextract 0.0.1
+# exploreHTP 0.0.1
 
 * Initial CRAN submission.

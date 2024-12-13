@@ -30,7 +30,7 @@ app_ui <- function(request) {
         mod_00_home_ui("00_home_1")
       ),
       nav_panel(
-        title = "Autoextract",
+        title = "exploreHTP",
         mod_02_auto_extract_ui("02_auto_extract_1")
       ),
       nav_panel(
@@ -60,7 +60,7 @@ app_ui <- function(request) {
       nav_item(
         tags$a(
           tags$span(icon("github"), "Source code"),
-          href = "https://github.com/AparicioJohan/autoextract",
+          href = "https://github.com/AparicioJohan/exploreHTP",
           target = "_blank"
         )
       ),
@@ -94,7 +94,7 @@ golem_add_external_resources <- function() {
     favicon(),
     bundle_resources(
       path = app_sys("app/www"),
-      app_title = "autoextract"
+      app_title = "exploreHTP"
     ),
     shinytoastr::useToastr(),
     waiter::useWaiter()

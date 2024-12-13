@@ -51,7 +51,7 @@ usethis::use_test("app")
 # Documentation
 
 ## Vignette ----
-usethis::use_vignette("autoextract")
+usethis::use_vignette("exploreHTP")
 devtools::build_vignettes()
 
 ## Code Coverage----

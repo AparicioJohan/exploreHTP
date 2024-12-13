@@ -19,7 +19,7 @@
 ## to change the name in the app_sys() function in app_config.R /!\
 ##
 golem::fill_desc(
-  pkg_name = "autoextract", # The name of the golem package containing the app (typically lowercase, no underscore or periods)
+  pkg_name = "exploreHTP", # The name of the golem package containing the app (typically lowercase, no underscore or periods)
   pkg_title = "Shape Resizer", # What the Package Does (One Line, Title Case, No Period)
   pkg_description = "PKG_DESC.", # What the package does (one paragraph).
   authors = person(
@@ -28,7 +28,7 @@ golem::fill_desc(
     email = "johanstevenapa@gmail.com", # Your email
     role = c("aut", "cre") # Your role (here author/creator)
   ),
-  repo_url = "https://github.com/AparicioJohan/autoextract", # The URL of the GitHub repo (optional),
+  repo_url = "https://github.com/AparicioJohan/exploreHTP", # The URL of the GitHub repo (optional),
   pkg_version = "0.0.0.9000", # The version of the package containing the app
   set_options = TRUE # Set the global golem options
 )
@@ -65,7 +65,7 @@ usethis::use_git()
 ## Sets the remote associated with 'name' to 'url'
 usethis::use_git_remote(
   name = "origin",
-  url = "https://github.com/AparicioJohan/autoextract.git"
+  url = "https://github.com/AparicioJohan/exploreHTP.git"
 )
 
 # You're now set! ----

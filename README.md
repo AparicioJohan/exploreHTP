@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# `{autoextract}`
+# `{exploreHTP}`
 
 <!-- badges: start -->
 
@@ -11,11 +11,11 @@ experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](h
 
 ## Installation
 
-You can install the development version of `{autoextract}` like so:
+You can install the development version of `{exploreHTP}` like so:
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("AparicioJohan/autoextract")
+devtools::install_github("AparicioJohan/exploreHTP")
 ```
 
 ## Run
@@ -23,7 +23,7 @@ devtools::install_github("AparicioJohan/autoextract")
 You can launch the application by running:
 
 ``` r
-autoextract::run_app()
+exploreHTP::run_app()
 ```
 
 <img src='man/figures/Logo2.jpg' align="center"/>
