@@ -1,9 +1,9 @@
 Package: exploreHTP
-Title: Shape Resizer
+Title: Explore High Throughtput Phenotypic Data
 Version: 0.0.1
 Authors@R: 
     person("Johan", "Aparicio", , "johanstevenapa@gmail.com", role = c("aut", "cre"))
-Description: Shiny App for Shape Resize.
+Description: Web application for high throughtput phenotyping exploration.
 License: MIT + file LICENSE
 URL: https://github.com/AparicioJohan/exploreHTP
 BugReports: https://github.com/AparicioJohan/exploreHTP/issues
