@@ -12,7 +12,6 @@ Imports:
     config,
     dplyr,
     DT,
-    EBImage,
     exactextractr,
     flexFitR (>= 0.1.0),
     ggplot2,
@@ -36,9 +35,11 @@ RoxygenNote: 7.3.2
 Suggests: 
     raster,
     methods,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    BiocManager,
+    EBImage
 Config/testthat/edition: 3
 Depends: 
     R (>= 2.10)
 Remotes: 
-    AparicioJohan/autoextract
+    AparicioJohan/flexFitR

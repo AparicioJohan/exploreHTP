@@ -578,11 +578,15 @@ calc_mask <- function(mosaic,
 }
 
 calc_mask_auto <- function(mosaic, index, above = TRUE) {
+  ensure_ebimage()
   ind <- calc_index(mosaic = mosaic, index = index)
   tr <- as.array(ind[[index]])[, , 1]
   tr[is.nan(tr)] <- NA
   tr[is.infinite(tr)] <- NA
-  tr <- otsu(tr, range = c(min(tr, na.rm = TRUE), max(tr, na.rm = TRUE)))
+  tr <- EBImage::otsu(
+    x = tr,
+    range = c(min(tr, na.rm = TRUE), max(tr, na.rm = TRUE))
+  )
   if (above) {
     m <- ind[[index]] > tr
   } else {

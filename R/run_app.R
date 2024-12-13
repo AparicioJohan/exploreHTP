@@ -22,9 +22,8 @@
 #' @importFrom plotly plot_ly plotlyOutput renderPlotly
 #' @importFrom dplyr mutate select mutate_all rename filter all_of across
 #' @importFrom shinyalert shinyalert
-#' @importFrom utils write.csv read.csv
+#' @importFrom utils write.csv read.csv install.packages menu
 #' @importFrom grDevices rgb
-#' @importFrom EBImage otsu
 #' @importFrom stats coef
 #' @importFrom DT renderDT datatable DTOutput
 run_app <- function(
