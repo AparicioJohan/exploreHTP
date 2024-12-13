@@ -11,14 +11,14 @@ app_ui <- function(request) {
     # Your application UI logic
     page_navbar(
       title = tags$span(
-        # tags$img(
-        #   src = "www/logo.png",
-        #   width = "46px",
-        #   height = "auto",
-        #   class = "me-3",
-        #   alt = "Condor-Sky logo"
-        # ),
-        "Image Analyzer"
+        tags$img(
+          src = "www/logo.png",
+          width = "46px",
+          height = "auto",
+          class = "me-3",
+          alt = "exploreHTP logo"
+        ),
+        "exploreHTP"
       ),
       theme = bs_theme(preset = "shiny", version = 5),
       collapsible = TRUE,

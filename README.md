@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# `{exploreHTP}`
+# `{exploreHTP}` <img src='man/figures/logo.png' width = "120px" align="right"/>
 
 <!-- badges: start -->
 
@@ -40,5 +40,5 @@ This README has been compiled on the
 
 ``` r
 Sys.time()
-#> [1] "2024-12-09 10:35:33 CST"
+#> [1] "2024-12-13 14:24:06 CST"
 ```
