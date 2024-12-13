@@ -439,46 +439,36 @@ field_extract <- function(mosaic,
 
 
 calc_area <- function(mosaic, field_shape, field = NULL) {
-  if (is.null(field)) {
-    terra_vect <- vect(field_shape)
-    terra_rast <- rasterize(terra_vect, mosaic, field = "PlotID")
-    total_pixelcount <- exactextractr::exact_extract(
-      x = terra_rast,
-      y = sf::st_as_sf(as.polygons(terra_rast)),
-      fun = "count",
-      force_df = TRUE
-    )
-    area_pixel <- exactextractr::exact_extract(
-      x = mosaic[[1]],
-      y = sf::st_as_sf(as.polygons(terra_rast)),
-      fun = "count",
-      force_df = TRUE
-    )
-  } else {
-    terra_vect <- vect(field_shape)
-    terra_rast <- rasterize(terra_vect, mosaic, field = field)
-    total_pixelcount <- exactextractr::exact_extract(
-      x = terra_rast,
-      y = st_as_sf(as.polygons(terra_rast)),
-      fun = "count",
-      force_df = TRUE
-    )
-    area_pixel <- exactextractr::exact_extract(
-      x = mosaic[[1]],
-      y = st_as_sf(as.polygons(terra_rast)),
-      fun = "count",
-      force_df = TRUE
-    )
-  }
+  # Convert field_shape to terra vector
+  terra_vect <- vect(field_shape)
+  # Determine the rasterization field
+  raster_field <- if (is.null(field)) "PlotID" else field
+  # Rasterize using the specified field
+  terra_rast <- rasterize(terra_vect, mosaic, field = raster_field)
+  # Calculate total pixel count and area pixels
+  total_pixelcount <- exactextractr::exact_extract(
+    x = terra_rast,
+    y = sf::st_as_sf(as.polygons(terra_rast)),
+    fun = "count",
+    force_df = TRUE
+  )
+  area_pixel <- exactextractr::exact_extract(
+    x = mosaic[[1]],
+    y = sf::st_as_sf(as.polygons(terra_rast)),
+    fun = "count",
+    force_df = TRUE
+  )
+  # Calculate area percentage
   area_percentage <- round(area_pixel / total_pixelcount * 100, 3)
   names(area_percentage) <- "AreaPercentage"
   names(area_pixel) <- "PixelCount"
-  area_percentage <- cbind(
+  # Combine results with geometry
+  result <- cbind(
     sf::st_as_sf(as.polygons(terra_rast)),
     AreaPixel = area_pixel,
     area_percentage
   )
-  return(area_percentage)
+  return(result)
 }
 
 
