@@ -36,12 +36,12 @@ You can launch the application by running:
 exploreHTP::run_app()
 ```
 
-<img src='man/figures/Logo2.jpg' align="center"/>
+<img src='man/figures/Lastversion1.png' align="center"/>
 
 <br>
 <br>
 
-<img src='man/figures/desktop.png' align="center"/>
+<img src='man/figures/Lastversion2.png' align="center"/>
 
 ## About
 

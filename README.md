@@ -26,11 +26,11 @@ You can launch the application by running:
 exploreHTP::run_app()
 ```
 
-<img src='man/figures/Logo2.jpg' align="center"/>
+<img src='man/figures/Lastversion1.png' align="center"/>
 
 <br> <br>
 
-<img src='man/figures/desktop.png' align="center"/>
+<img src='man/figures/Lastversion2.png' align="center"/>
 
 ## About
 
@@ -40,5 +40,5 @@ This README has been compiled on the
 
 ``` r
 Sys.time()
-#> [1] "2024-12-13 14:24:06 CST"
+#> [1] "2024-12-13 14:54:16 CST"
 ```
