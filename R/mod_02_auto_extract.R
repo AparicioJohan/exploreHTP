@@ -14,7 +14,7 @@ mod_02_auto_extract_ui <- function(id) {
       fillable = TRUE,
       sidebar = sidebar(
         open = "desktop",
-        title = "exploreHTP",
+        title = "Autoextract",
         shinyWidgets::materialSwitch(
           inputId = ns("save_plots"),
           label = "Save Plots",

@@ -30,7 +30,7 @@ app_ui <- function(request) {
         mod_00_home_ui("00_home_1")
       ),
       nav_panel(
-        title = "exploreHTP",
+        title = "Autoextract",
         mod_02_auto_extract_ui("02_auto_extract_1")
       ),
       nav_panel(
