@@ -36,6 +36,34 @@ multi_save <- function(x,
   }
 }
 
+from_input_to_list <- function(input) {
+  if (is.null(input) | length(input) == 0) {
+    return()
+  }
+  # Split the input string into individual key-value pairs
+  pairs <- strsplit(input, ",\\s*")[[1]]
+  # Create a named list by splitting each key-value pair
+  result <- list()
+  for (pair in pairs) {
+    key_value <- strsplit(pair, "\\s*=\\s*")[[1]]
+    if (length(key_value) == 2) {
+      key <- trimws(key_value[1])
+      value <- trimws(key_value[2])
+      # Check if value is numeric
+      if (!is.na(suppressWarnings(as.numeric(value)))) {
+        result[[key]] <- as.numeric(value)
+      } else {
+        result[[key]] <- value
+      }
+    }
+  }
+  if (length(result) == 0) {
+    return()
+  } else {
+    result
+  }
+}
+
 
 resize <- function(plot_shape, mosaic, angle = 0, xsize = 0.8, ysize = 4) {
   # Changing dimensions of the shape

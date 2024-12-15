@@ -167,13 +167,23 @@ mod_04_flexfitr_ui <- function(id) {
         column(
           width = 4,
           br(),
-          selectInput(
-            inputId = ns("functions"),
-            label = "Regression Function:",
-            choices = list_funs(),
-            selected = c("fn_lin"),
-            multiple = FALSE,
-            width = "90%"
+          tags$div(
+            style = "display: flex; align-items: center; gap: 10px;",
+            selectInput(
+              inputId = ns("functions"),
+              label = tagList(
+                "Regression Function:",
+                actionLink(
+                  inputId = ns("view_fun"),
+                  icon = icon("eye"),
+                  label = "View"
+                )
+                ),
+              choices = list_funs(),
+              selected = c("fn_lin"),
+              multiple = FALSE,
+              width = "90%"
+            )
           ),
           selectInput(
             inputId = ns("methods"),
@@ -326,13 +336,14 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
         ),
         tags$div(
           style = "display: flex; align-items: center; gap: 10px;",
-          strong("Parameters:"),
+          strong("Names:"),
           em(paste0(args, collapse = ", "))
         ),
-        actionButton(
-          inputId = ns("view_fun"),
-          icon = icon("eye"),
-          label = "View",
+        textInput(
+          inputId = ns("fixed_values"),
+          label = strong("Fixed Parameters:"),
+          value = NULL,
+          placeholder = "e.g. k = max(y), m = 2",
           width = "100%"
         ),
         textInput(
@@ -533,7 +544,7 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
                   lower <- as.numeric(lower)
                   upper <- unlist(strsplit(input$upper_limit, ",\\s*"))
                   upper <- as.numeric(upper)
-                  fixed_params <- NULL
+                  fixed_params <- from_input_to_list(input$fixed_values)
                   method <- input$methods
                   subset <- input$uid
                   options <- list(
