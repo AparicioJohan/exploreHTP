@@ -19,7 +19,7 @@ app_server <- function(input, output, session) {
     nav_select(id = "main_navbar", session, selected = "Resizer")
   })
   observeEvent(selector$link_4(), {
-    nav_select(id = "main_navbar", session, selected = "flexFitR")
+    nav_select(id = "main_navbar", session, selected = "Modeling")
   })
 
   mod_01_grid_resize_server("01_grid_resize_1")

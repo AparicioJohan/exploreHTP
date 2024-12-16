@@ -14,7 +14,7 @@ mod_04_flexfitr_ui <- function(id) {
       fillable = TRUE,
       sidebar = sidebar(
         open = "desktop",
-        title = "flexFitR",
+        title = "Modeling",
         accordion(
           multiple = FALSE,
           accordion_panel(
@@ -178,7 +178,7 @@ mod_04_flexfitr_ui <- function(id) {
                   icon = icon("eye"),
                   label = "View"
                 )
-                ),
+              ),
               choices = list_funs(),
               selected = c("fn_lin"),
               multiple = FALSE,
@@ -243,7 +243,6 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
 
     path_img <- reactiveVal()
     output_model <- reactiveVal()
-    uid_active <- reactiveVal()
     tables_list <- reactiveValues()
 
     # Plot Shape
@@ -328,33 +327,33 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
       fn <- input$functions
       args <- try(expr = names(formals(fn))[-1], silent = TRUE)
       tagList(
-        textInput(
-          inputId = ns("initial_values"),
-          label = strong("Starting Values:"),
-          value = paste(rep(0.1, length(args)), collapse = ", "),
-          width = "100%"
-        ),
         tags$div(
           style = "display: flex; align-items: center; gap: 10px;",
           strong("Names:"),
           em(paste0(args, collapse = ", "))
         ),
-        textInput(
+        textAreaInput(
+          inputId = ns("initial_values"),
+          label = helpText("Starting Values:"),
+          value = paste(args, "= 0.1", collapse = "; "),
+          width = "100%"
+        ),
+        textAreaInput(
           inputId = ns("fixed_values"),
-          label = strong("Fixed Parameters:"),
+          label = helpText("Fixed Parameters:"),
           value = NULL,
-          placeholder = "e.g. k = max(y), m = 2",
+          placeholder = "e.g. k = max(y); m = 2",
           width = "100%"
         ),
         textInput(
           inputId = ns("upper_limit"),
-          label = "Upper Limit (Optional):",
+          label = helpText("Upper Limit (Optional):"),
           value = "-Inf",
           width = "100%"
         ),
         textInput(
           inputId = ns("lower_limit"),
-          label = "Lower Limit (Optional):",
+          label = helpText("Lower Limit (Optional):"),
           value = "+Inf",
           width = "100%"
         )
@@ -537,8 +536,7 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
                   grp <- input$group
                   keep <- input$metadata
                   fn <- input$functions
-                  parameters <- unlist(strsplit(input$initial_values, ",\\s*"))
-                  parameters <- as.numeric(parameters)
+                  parameters <- from_input_to_list(input$initial_values)
                   names(parameters) <- names(formals(fn))[-1]
                   lower <- unlist(strsplit(input$lower_limit, ",\\s*"))
                   lower <- as.numeric(lower)
@@ -609,7 +607,9 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
         req(output_model())
         req(input$uid_plot)
         req(input$n_points_inter)
-        if (input$uid_plot == "") return()
+        if (input$uid_plot == "") {
+          return()
+        }
         if (!req(input$uid_plot) %in% output_model()[["param"]]$uid) {
           return()
         }
@@ -651,7 +651,9 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
       req(output_model())
       req(input$uid_plot)
       req(input$n_points_inter)
-      if (input$uid_plot == "") return()
+      if (input$uid_plot == "") {
+        return()
+      }
       if (!req(input$uid_plot) %in% output_model()[["param"]]$uid) {
         return()
       }

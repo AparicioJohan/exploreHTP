@@ -38,7 +38,7 @@ app_ui <- function(request) {
         mod_03_plot_visual_ui("03_plot_visual_1")
       ),
       nav_panel(
-        title = "flexFitR",
+        title = "Modeling",
         mod_04_flexfitr_ui("04_flexfitr_1")
       ),
       nav_panel(

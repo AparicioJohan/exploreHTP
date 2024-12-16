@@ -37,11 +37,11 @@ multi_save <- function(x,
 }
 
 from_input_to_list <- function(input) {
-  if (is.null(input) | length(input) == 0) {
+  if (is.null(input) || length(input) == 0) {
     return()
   }
   # Split the input string into individual key-value pairs
-  pairs <- strsplit(input, ",\\s*")[[1]]
+  pairs <- strsplit(input, ";\\s*")[[1]]
   # Create a named list by splitting each key-value pair
   result <- list()
   for (pair in pairs) {
@@ -122,7 +122,7 @@ ensure_ebimage <- function() {
     if (interactive()) {
       cat("Package {EBImage} is required but not installed.\n")
       choice <- menu(c("Yes", "No"), title = "Would you like to install it now?")
-      if (choice == 1) {  # User chose "Yes"
+      if (choice == 1) { # User chose "Yes"
         # Ensure BiocManager is available for installation
         if (!requireNamespace("BiocManager", quietly = TRUE)) {
           install.packages("BiocManager", quiet = TRUE)
@@ -134,15 +134,14 @@ ensure_ebimage <- function() {
           message("Failed to install {EBImage}. Please try manual installation.")
           return(FALSE)
         }
-      } else {  # User chose "No"
+      } else { # User chose "No"
         message("Pease manually install {EBImage}:\nhttps://bioconductor.org/packages/EBImage")
         return(FALSE)
       }
-    } else {  # Non-interactive session
+    } else { # Non-interactive session
       message("Package {EBImage} is required. Install it from:\nhttps://bioconductor.org/packages/EBImage")
       return(FALSE)
     }
   }
   return(TRUE)
 }
-

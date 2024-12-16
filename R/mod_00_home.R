@@ -36,7 +36,7 @@ mod_00_home_ui <- function(id) {
             "Grid resizing tool to easily modify existing grid files."
           ),
           tags$li(
-            actionLink(inputId = ns("link_4"), label = strong("flexFitR:")),
+            actionLink(inputId = ns("link_4"), label = strong("Modeling:")),
             "Non-linear regression models using flexFitR for model fitting."
           )
         ),

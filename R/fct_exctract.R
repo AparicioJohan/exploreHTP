@@ -513,7 +513,7 @@ calc_index <- function(mosaic,
     NIR1 <- mosaic[[nir]]
     names(mosaic)[nir] <- "NIR"
   }
-  for (i in 1:length(index)) {
+  for (i in seq_along(length(index))) {
     value <- index[i]
     new_layer <- eval(parse(text = paste(catalog$eq[catalog$index == value])))
     mosaic <- append(mosaic, new_layer)
