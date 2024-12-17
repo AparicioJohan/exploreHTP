@@ -30,16 +30,16 @@ app_ui <- function(request) {
         mod_00_home_ui("00_home_1")
       ),
       nav_panel(
+        title = "Modeling",
+        mod_04_flexfitr_ui("04_flexfitr_1")
+      ),
+      nav_panel(
         title = "Autoextract",
         mod_02_auto_extract_ui("02_auto_extract_1")
       ),
       nav_panel(
         title = "Visualizer",
         mod_03_plot_visual_ui("03_plot_visual_1")
-      ),
-      nav_panel(
-        title = "Modeling",
-        mod_04_flexfitr_ui("04_flexfitr_1")
       ),
       nav_panel(
         title = "Resizer",
@@ -66,8 +66,8 @@ app_ui <- function(request) {
       ),
       nav_panel(
         title = "About",
-        icon = icon("question")
-        # mod_01_grid_resize_ui("01_grid_resize_1")
+        icon = icon("question"),
+        mod_99_about_ui("99_about_1")
       ),
       nav_item(
         input_dark_mode(id = "dark_mode", mode = "light")
@@ -91,7 +91,7 @@ golem_add_external_resources <- function() {
   )
 
   tags$head(
-    favicon(),
+    favicon(ext = 'png'),
     bundle_resources(
       path = app_sys("app/www"),
       app_title = "exploreHTP"

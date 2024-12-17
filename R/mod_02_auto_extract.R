@@ -34,12 +34,6 @@ mod_02_auto_extract_ui <- function(id) {
           accordion_panel(
             "Settings",
             icon = icon("cog"),
-            textInput(
-              inputId = ns("rgb_bands"),
-              label = "RGB/RedEdge/NIR:",
-              value = "1, 2, 3",
-              width = "90%"
-            ),
             selectInput(
               inputId = ns("seg_index"),
               label = "Segmentation Index:",
@@ -71,80 +65,82 @@ mod_02_auto_extract_ui <- function(id) {
         h2("Inputs"),
         column(
           width = 12,
-          shinyDirButton(
-            id = ns("directory_rgb"),
-            label = "Select RGB Directory",
-            title = "Choose any folder",
-            icon = icon("magnifying-glass")
-          ),
-          shinyDirButton(
-            id = ns("directory_dsm"),
-            label = "Select DSM Directory",
-            title = "Choose any folder",
-            icon = icon("magnifying-glass")
-          )
-        ),
-        column(
-          width = 12,
-          textOutput(ns("dirPathRGB")),
-          textOutput(ns("dirPathDSM"))
-        ),
-        column(
-          width = 4,
-          br(),
           tags$div(
             style = "display: flex; align-items: center; gap: 10px;",
             fileInput(
               inputId = ns("plot_shape"),
               label = "Grid Shapefile (.gpkg)",
               accept = c(".gpkg"),
-              width = "70%"
+              width = "23%",
+              placeholder = "Grid Shapefile (.gpkg)"
             ),
             actionButton(
               inputId = ns("view_shape"),
               icon = icon("eye"),
               label = NULL,
               class = "btn-primary"
-            )
-          ),
-          checkboxInput(
-            inputId = ns("optionals"),
-            label = "More Options?",
-            value = FALSE,
-            width = "100%"
-          ),
-          conditionalPanel(
-            condition = "input.optionals == true",
-            ns = ns,
-            fileInput(
-              inputId = ns("plot_shape_crop"),
-              label = "Shapefile to Crop (Optional)",
-              accept = c(".gpkg"),
-              width = "90%"
             ),
-            fileInput(
-              inputId = ns("area"),
-              label = "Area of Interest (Optional)",
-              accept = c(".gpkg"),
-              width = "90%"
+            shinyDirButton(
+              id = ns("directory_rgb"),
+              label = "Images Directory",
+              title = "Choose any folder",
+              icon = icon("magnifying-glass")
+            ),
+            shinyDirButton(
+              id = ns("directory_dsm"),
+              label = "DSM Directory",
+              title = "Choose any folder",
+              icon = icon("magnifying-glass")
+            ),
+            shinyWidgets::dropdownButton(
+              tags$strong("Optional Inputs"),
+              circle = FALSE,
+              label = "More",
+              icon = icon("plus"),
+              width = "400px",
+              br(),
+              fileInput(
+                inputId = ns("plot_shape_crop"),
+                label = helpText("Shapefile to Crop (Optional)"),
+                accept = c(".gpkg"),
+                width = "100%"
+              ),
+              fileInput(
+                inputId = ns("area"),
+                label = helpText("Area of Interest (Optional)"),
+                accept = c(".gpkg"),
+                width = "100%"
+              ),
+              tooltip = shinyWidgets::tooltipOptions(
+                title = "Click to see more options!"
+              )
             )
           )
         ),
         column(
+          width = 12,
+          uiOutput(ns("dirPathRGB")),
+          # textOutput(ns("dirPathDSM"))
+        ),
+        column(
           width = 4,
-          br(),
+          textInput(
+            inputId = ns("rgb_bands"),
+            label = "RGB/RedEdge/NIR:",
+            value = "1, 2, 3",
+            width = "90%"
+          ),
           selectInput(
             inputId = ns("indices"),
             label = "Select Indices:",
-            choices = c(
-              "BI", "BIM", "SCI", "GLI",
-              "HI", "NGRDI", "SI", "VARI",
-              "HUE", "BGI"
-            ),
+            choices = exploreHTP::indices$index,
             selected = c("GLI", "NGRDI", "BGI"),
             multiple = TRUE,
             width = "90%"
-          ),
+          )
+        ),
+        column(
+          width = 4,
           selectInput(
             inputId = ns("plot_id"),
             label = "Select Plot ID:",
@@ -160,7 +156,6 @@ mod_02_auto_extract_ui <- function(id) {
         ),
         column(
           width = 4,
-          br(),
           # Text input for experiment name
           textInput(
             inputId = ns("name_experiment"),
@@ -178,7 +173,7 @@ mod_02_auto_extract_ui <- function(id) {
           actionButton(ns("submit"), "Submit", icon = icon("thumbs-up")),
           textOutput(ns("dirPathOut"))
         ),
-        column(width = 12, DTOutput(ns("data_table")))
+        column(width = 12, br(), uiOutput(ns("ui_plot")))
       )
     )
   )
@@ -241,8 +236,13 @@ mod_02_auto_extract_server <- function(id) {
       },
       ignoreInit = TRUE
     )
-    output$dirPathRGB <- renderText({
-      path_rgb()
+    output$dirPathRGB <- renderUI({
+      tagList(
+        fluidRow(
+          helpText(paste0(path_rgb())),
+          helpText(paste0(path_dsm()))
+        )
+      )
     })
 
     # Path DSM
@@ -428,6 +428,7 @@ mod_02_auto_extract_server <- function(id) {
         title = tagList(icon = icon("table-cells"), "View Shape"),
         size = "l",
         easyClose = TRUE,
+        footer = NULL,
         shinyWidgets::pickerInput(
           inputId = ns("color_by"),
           label = "Select Column:",
@@ -449,6 +450,16 @@ mod_02_auto_extract_server <- function(id) {
         data = dt,
         options = list(pageLength = 5, autoWidth = TRUE),
         filter = "top"
+      )
+    })
+
+    # UI
+    output$ui_plot <- renderUI({
+      req(results())
+      card(
+        full_screen = TRUE,
+        card_header(tagList(icon = icon("chart-line"), "Data")),
+        DTOutput(ns("data_table"))
       )
     })
   })

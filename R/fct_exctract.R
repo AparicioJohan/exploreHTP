@@ -174,6 +174,9 @@ auto_extract <- function(path_rgb = NULL,
     if (save_shape) {
       path <- paste0(path_out, "/", name_experiment, "/shape_files/")
       create_folder_if_not_exists(path)
+      dt_tmp <- dt_tmp |>
+        mutate(Trial = name_experiment, .before = Time)
+      names(dt_tmp) <- gsub("_mean", "", names(dt_tmp))
       st_write(
         obj = dt_tmp,
         dsn = paste0(path, "shape_", name_experiment, ".gpkg"),
@@ -204,50 +207,13 @@ auto_extract <- function(path_rgb = NULL,
   info_imgs <- as.data.frame(do.call(what = rbind, args = tt))
   # Plot Time Series
   if (time_serie) {
-    for (w in sort(unique(plot_shape[[plot_id]]))) {
-      path_shape <- paste0(
-        path_out, "/",
-        name_experiment, "/shape_files/shape_", name_experiment,
-        ".gpkg"
-      )
-      p0 <- plot_organizer(
-        id = w,
-        plot_id = plot_id,
-        path = paste0(path_out, "/", name_experiment, "/plot/"),
-        path_shape = path_shape,
-        base_size = 14
-      )
-      create_folder_if_not_exists(
-        path = paste0(path_out, "/", name_experiment, "/plots_time/")
-      )
-      ggsave(
-        filename = paste0(
-          path_out, "/", name_experiment, "/plots_time/ID_", w, ".png"
-        ),
-        plot = p0$figure,
-        units = "in",
-        dpi = 300,
-        width = 8,
-        height = 6
-      ) |> suppressWarnings()
-      p1 <- plot_organizer(
-        id = w,
-        plot_id = plot_id,
-        path = paste0(path_out, "/", name_experiment, "/plot_mask/"),
-        path_shape = path_shape,
-        base_size = 14
-      )
-      ggsave(
-        filename = paste0(
-          path_out, "/", name_experiment, "/plots_time/ID_", w, "_mask.png"
-        ),
-        plot = p1$figure,
-        units = "in",
-        dpi = 300,
-        width = 8,
-        height = 6
-      ) |> suppressWarnings()
-    }
+    plot_time_series(
+      plot_shape = plot_shape,
+      plot_id = plot_id,
+      path_out = path_out,
+      name_experiment = name_experiment,
+      base_size = 14
+    )
   }
   return(list(dt = dt, info = info_imgs))
 }
@@ -328,7 +294,7 @@ plot_organizer <- function(id,
       full.names = TRUE
     )
     mosaic <- terra::rast(path_tmp)
-    set.names(mosaic, value = c("Red", "Green", "Blue"), index = 1:3)
+    names(mosaic)[1:3] <- c("Red", "Green", "Blue")
     grid_shape <- path_shape |>
       st_read(layer = paste(i), quiet = TRUE) |>
       filter(.data[[plot_id]] %in% id) |>
@@ -388,6 +354,59 @@ plot_organizer <- function(id,
   out <- list(df = df, info = info, figure = p0)
   return(out)
 }
+
+plot_time_series <- function(plot_shape,
+                             plot_id,
+                             path_out,
+                             name_experiment,
+                             base_size = 14) {
+  unique_ids <- sort(unique(plot_shape[[plot_id]]))
+  for (w in unique_ids) {
+    path_shape <- paste0(
+      path_out, "/", name_experiment,
+      "/shape_files/shape_", name_experiment, ".gpkg"
+    )
+    p0 <- plot_organizer(
+      id = w,
+      plot_id = plot_id,
+      path = paste0(path_out, "/", name_experiment, "/plot/"),
+      path_shape = path_shape,
+      base_size = 14
+    )
+    create_folder_if_not_exists(
+      path = paste0(path_out, "/", name_experiment, "/plots_time/")
+    )
+    ggsave(
+      filename = paste0(
+        path_out, "/", name_experiment, "/plots_time/ID_", w, ".png"
+      ),
+      plot = p0$figure,
+      units = "in",
+      dpi = 300,
+      width = 8,
+      height = 6
+    ) |> suppressWarnings()
+    p1 <- plot_organizer(
+      id = w,
+      plot_id = plot_id,
+      path = paste0(path_out, "/", name_experiment, "/plot_mask/"),
+      path_shape = path_shape,
+      base_size = 14
+    )
+    ggsave(
+      filename = paste0(
+        path_out, "/", name_experiment, "/plots_time/ID_", w, "_mask.png"
+      ),
+      plot = p1$figure,
+      units = "in",
+      dpi = 300,
+      width = 8,
+      height = 6
+    ) |> suppressWarnings()
+  }
+  message("Time series plots saved successfully.")
+}
+
 
 
 field_extract <- function(mosaic,
@@ -513,7 +532,7 @@ calc_index <- function(mosaic,
     NIR1 <- mosaic[[nir]]
     names(mosaic)[nir] <- "NIR"
   }
-  for (i in seq_along(length(index))) {
+  for (i in seq_along(index)) {
     value <- index[i]
     new_layer <- eval(parse(text = paste(catalog$eq[catalog$index == value])))
     mosaic <- append(mosaic, new_layer)

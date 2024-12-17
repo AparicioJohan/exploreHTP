@@ -24,6 +24,10 @@ mod_00_home_ui <- function(id) {
         h4("Explore the following modules:"),
         tags$ol(
           tags$li(
+            actionLink(inputId = ns("link_4"), label = strong("Modeling:")),
+            "Non-linear regression models using flexFitR for model fitting."
+          ),
+          tags$li(
             actionLink(inputId = ns("link_1"), label = strong("Autoextract:")),
             "extract plot-level information by providing a grid shape file and the image paths."
           ),
@@ -34,10 +38,6 @@ mod_00_home_ui <- function(id) {
           tags$li(
             actionLink(inputId = ns("link_3"), label = strong("Resizer:")),
             "Grid resizing tool to easily modify existing grid files."
-          ),
-          tags$li(
-            actionLink(inputId = ns("link_4"), label = strong("Modeling:")),
-            "Non-linear regression models using flexFitR for model fitting."
           )
         ),
         hr(),
