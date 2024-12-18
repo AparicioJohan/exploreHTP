@@ -44,7 +44,7 @@ mod_99_about_ui <- function(id) {
         ),
         shiny::p(
           "This project was supported by the ",
-          shiny::em("University of Wisconsin–Madison.")
+          shiny::em("University of Wisconsin-Madison.")
         ),
         shiny::br(),
         shiny::p(
