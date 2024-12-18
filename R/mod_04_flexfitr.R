@@ -752,22 +752,33 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
     })
 
     # AUC Table
-    output$auc_table <- renderDT({
+    output$predict_table <- renderDT({
       req(output_model())
-      req(input$auc_range)
-      req(input$n_points)
-      x <- as.numeric(unlist(strsplit(input$auc_range, ",\\s*")))
-      if (length(x) <= 1 | length(x) > 2) {
-        return(NULL)
+      if(input$type_predict == "auc") {
+        req(input$auc_range)
+        req(input$n_points)
+        x <- as.numeric(unlist(strsplit(input$auc_range, ",\\s*")))
+        if (length(x) <= 1 | length(x) > 2) {
+          return(NULL)
+        }
+        pred_data <- predict(
+          object = output_model(),
+          x = x,
+          type = "auc",
+          n_points = input$n_points
+        )
+      } else {
+        req(input$point_pred)
+        x <- as.numeric(unlist(strsplit(input$point_pred, ",\\s*")))
+        if (length(x) < 1) return(NULL)
+        pred_data <- predict(
+          object = output_model(),
+          x = x,
+          type = input$type_predict
+        )
       }
-      auc_data <- predict(
-        object = output_model(),
-        x = x,
-        type = "auc",
-        n_points = input$n_points
-      )
-      tables_list$auc <- auc_data
-      dt <- auc_data |>
+      tables_list$prediction <- pred_data
+      dt <- pred_data |>
         dplyr::mutate_if(is.numeric, round, 3)
       datatable(
         data = dt,
@@ -831,19 +842,6 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
                 multiple = FALSE,
                 width = "100%"
               ),
-              # shinyWidgets::pickerInput(
-              #   inputId = ns("uid_plot"),
-              #   label = "Group:",
-              #   choices = NULL,
-              #   multiple = FALSE,
-              #   options = shinyWidgets::pickerOptions(
-              #     container = "body",
-              #     actionsBox = TRUE,
-              #     size = 5,
-              #     liveSearch = TRUE
-              #   ),
-              #   width = "100%"
-              # ),
               checkboxInput(
                 inputId = ns("interactive"),
                 label = "Interactive?",
@@ -897,7 +895,7 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
             card_body(DTOutput(ns("results_table")))
           ),
           nav_panel(
-            "Coef",
+            "Coefficients",
             card_body(DTOutput(ns("coef_table")))
           ),
           nav_panel(
@@ -905,30 +903,60 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
             card_body(DTOutput(ns("metrics_table")))
           ),
           nav_panel(
-            "AUC",
+            "Predictions",
             layout_sidebar(
               fillable = TRUE,
               sidebar = sidebar(
                 position = "right",
                 width = 220,
                 open = "closed",
-                numericInput(
-                  inputId = ns("n_points"),
-                  label = "Number of Points:",
-                  min = 1,
-                  max = 2000,
-                  value = 100,
-                  step = 1,
-                  width = "100%"
+                shinyWidgets::prettyRadioButtons(
+                  inputId = ns("type_predict"),
+                  label = NULL,
+                  selected = "auc",
+                  inline = FALSE,
+                  status = "primary",
+                  fill = TRUE,
+                  icon = icon("check"),
+                  choiceNames = c(
+                    "AUC",
+                    "Point",
+                    "1st Derivative",
+                    "2nd Derivative"
+                  ),
+                  choiceValues = c("auc", "point", "fd", "sd")
                 ),
-                textInput(
-                  inputId = ns("auc_range"),
-                  label = "Interval",
-                  value = paste0(limit_inf, ", ", limit_sup),
-                  width = "100%"
+                conditionalPanel(
+                  condition = "input.type_predict == 'auc'",
+                  ns = ns,
+                  numericInput(
+                    inputId = ns("n_points"),
+                    label = "Number of Points:",
+                    min = 1,
+                    max = 2000,
+                    value = 100,
+                    step = 1,
+                    width = "100%"
+                  ),
+                  textInput(
+                    inputId = ns("auc_range"),
+                    label = "Interval",
+                    value = paste0(limit_inf, ", ", limit_sup),
+                    width = "100%"
+                  )
+                ),
+                conditionalPanel(
+                  condition = "input.type_predict != 'auc'",
+                  ns = ns,
+                  textInput(
+                    inputId = ns("point_pred"),
+                    label = "Point (x-values)",
+                    value = 0.1,
+                    width = "100%"
+                  )
                 )
               ),
-              DTOutput(ns("auc_table"))
+              DTOutput(ns("predict_table"))
             )
           )
         )
@@ -946,7 +974,7 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
         req(tables_list$params)
         req(tables_list$coef)
         req(tables_list$metrics)
-        req(tables_list$auc)
+        req(tables_list$prediction)
         wb <- createWorkbook()
         # Add sheets and data
         addWorksheet(wb, "parameters")
@@ -955,8 +983,8 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
         writeData(wb, "coefficients", tables_list$coef)
         addWorksheet(wb, "metrics")
         writeData(wb, "metrics", tables_list$metrics)
-        addWorksheet(wb, "auc")
-        writeData(wb, "auc", tables_list$auc)
+        addWorksheet(wb, "prediction")
+        writeData(wb, "prediction", tables_list$prediction)
         # Save the workbook to the specified file
         saveWorkbook(wb, file, overwrite = TRUE)
       }
