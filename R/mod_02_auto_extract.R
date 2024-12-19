@@ -86,19 +86,21 @@ mod_02_auto_extract_ui <- function(id) {
               title = "Choose any folder",
               icon = icon("magnifying-glass")
             ),
-            shinyDirButton(
-              id = ns("directory_dsm"),
-              label = "DSM Directory",
-              title = "Choose any folder",
-              icon = icon("magnifying-glass")
-            ),
             shinyWidgets::dropdownButton(
               tags$strong("Optional Inputs"),
               circle = FALSE,
               label = "More",
               icon = icon("plus"),
               width = "400px",
+              margin = "20px",
               br(),
+              shinyDirButton(
+                id = ns("directory_dsm"),
+                label = "DSM Directory",
+                title = "Choose any folder",
+                icon = icon("magnifying-glass"),
+                style = "margin-bottom: 25px;"
+              ),
               fileInput(
                 inputId = ns("plot_shape_crop"),
                 label = helpText("Shapefile to Crop (Optional)"),
@@ -119,8 +121,7 @@ mod_02_auto_extract_ui <- function(id) {
         ),
         column(
           width = 12,
-          uiOutput(ns("dirPathRGB")),
-          # textOutput(ns("dirPathDSM"))
+          uiOutput(ns("dirPathRGB"))
         ),
         column(
           width = 4,
@@ -171,7 +172,7 @@ mod_02_auto_extract_ui <- function(id) {
           ),
           # Submit button
           actionButton(ns("submit"), "Submit", icon = icon("thumbs-up")),
-          textOutput(ns("dirPathOut"))
+          uiOutput(ns("dirPathOut"))
         ),
         column(width = 12, br(), uiOutput(ns("ui_plot")))
       )
@@ -252,9 +253,6 @@ mod_02_auto_extract_server <- function(id) {
       },
       ignoreInit = TRUE
     )
-    output$dirPathDSM <- renderText({
-      path_dsm()
-    })
 
     # Path Output
     observeEvent(input$directory_out,
@@ -263,8 +261,12 @@ mod_02_auto_extract_server <- function(id) {
       },
       ignoreInit = TRUE
     )
-    output$dirPathOut <- renderText({
-      path_out()
+    output$dirPathOut <- renderUI({
+      tagList(
+        fluidRow(
+          helpText(paste0(path_out()))
+        )
+      )
     })
 
     # Update Select Plot

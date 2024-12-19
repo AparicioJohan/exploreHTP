@@ -7,7 +7,7 @@ auto_extract <- function(path_rgb = NULL,
                          bands = c("Red", "Green", "Blue"),
                          index_mask = "HUE",
                          mask_above = TRUE,
-                         threshold = NULL,
+                         threshold = 0,
                          time,
                          plot_id = NULL,
                          save_plots = FALSE,
@@ -57,7 +57,8 @@ auto_extract <- function(path_rgb = NULL,
     # Detecting Soil
     message("Removing Soil")
     if (is.null(threshold)) {
-      t1_no_soil <- calc_mask_auto(t1, index = index_mask, above = mask_above)
+      stop("You need to provide a threshold")
+      # t1_no_soil <- calc_mask_auto(t1, index = index_mask, above = mask_above)
     } else {
       threshold <- as.numeric(threshold)
       t1_no_soil <- calc_mask(
@@ -586,24 +587,24 @@ calc_mask <- function(mosaic,
   return(out)
 }
 
-calc_mask_auto <- function(mosaic, index, above = TRUE) {
-  ensure_ebimage()
-  ind <- calc_index(mosaic = mosaic, index = index)
-  tr <- as.array(ind[[index]])[, , 1]
-  tr[is.nan(tr)] <- NA
-  tr[is.infinite(tr)] <- NA
-  tr <- EBImage::otsu(
-    x = tr,
-    range = c(min(tr, na.rm = TRUE), max(tr, na.rm = TRUE))
-  )
-  if (above) {
-    m <- ind[[index]] > tr
-  } else {
-    m <- ind[[index]] < tr
-  }
-  new <- terra::mask(mosaic, m, maskvalue = TRUE)
-  return(list(new = new, mask = m))
-}
+# calc_mask_auto <- function(mosaic, index, above = TRUE) {
+#   ensure_ebimage()
+#   ind <- calc_index(mosaic = mosaic, index = index)
+#   tr <- as.array(ind[[index]])[, , 1]
+#   tr[is.nan(tr)] <- NA
+#   tr[is.infinite(tr)] <- NA
+#   tr <- EBImage::otsu(
+#     x = tr,
+#     range = c(min(tr, na.rm = TRUE), max(tr, na.rm = TRUE))
+#   )
+#   if (above) {
+#     m <- ind[[index]] > tr
+#   } else {
+#     m <- ind[[index]] < tr
+#   }
+#   new <- terra::mask(mosaic, m, maskvalue = TRUE)
+#   return(list(new = new, mask = m))
+# }
 
 calc_height <- function(dsm_before, dsm_after) {
   if (!inherits(dsm_before, "SpatRaster") || !nlyr(dsm_before) ==

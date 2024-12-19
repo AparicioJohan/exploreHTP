@@ -59,10 +59,9 @@ mod_99_about_ui <- function(id) {
 #' 99_about Server Functions
 #'
 #' @noRd
-mod_99_about_server <- function(id){
-  moduleServer(id, function(input, output, session){
+mod_99_about_server <- function(id) {
+  moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
   })
 }
 

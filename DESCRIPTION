@@ -7,6 +7,8 @@ Description: Web application for high throughtput phenotyping exploration.
 License: MIT + file LICENSE
 URL: https://github.com/AparicioJohan/exploreHTP
 BugReports: https://github.com/AparicioJohan/exploreHTP/issues
+Depends: 
+    R (>= 2.10)
 Imports: 
     bslib,
     config,
@@ -16,10 +18,13 @@ Imports:
     flexFitR (>= 0.1.0),
     ggplot2,
     golem,
+    grDevices,
     leaflet,
     mapview,
+    methods,
     openxlsx,
     plotly,
+    raster,
     sf,
     shiny,
     shinyalert,
@@ -27,19 +32,13 @@ Imports:
     shinytoastr,
     shinyWidgets,
     stars,
+    stats,
     terra,
+    utils,
     waiter
+Remotes: 
+    AparicioJohan/flexFitR
+Config/testthat/edition: 3
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.2
-Suggests: 
-    raster,
-    methods,
-    testthat (>= 3.0.0),
-    BiocManager,
-    EBImage
-Config/testthat/edition: 3
-Depends: 
-    R (>= 2.10)
-Remotes: 
-    AparicioJohan/flexFitR

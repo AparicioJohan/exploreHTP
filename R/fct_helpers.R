@@ -114,34 +114,33 @@ rect_funct <- function(x, xsize = 0.85, ysize = 4.5) {
   return(bbox)
 }
 
-
-ensure_ebimage <- function() {
-  # Check if EBImage is installed
-  if (!requireNamespace("EBImage", quietly = TRUE)) {
-    # Interactive session prompt
-    if (interactive()) {
-      cat("Package {EBImage} is required but not installed.\n")
-      choice <- menu(c("Yes", "No"), title = "Would you like to install it now?")
-      if (choice == 1) { # User chose "Yes"
-        # Ensure BiocManager is available for installation
-        if (!requireNamespace("BiocManager", quietly = TRUE)) {
-          install.packages("BiocManager", quiet = TRUE)
-        }
-        # Install EBImage
-        BiocManager::install("EBImage", update = FALSE, ask = FALSE, quiet = TRUE)
-        # Verify successful installation
-        if (!requireNamespace("EBImage", quietly = TRUE)) {
-          message("Failed to install {EBImage}. Please try manual installation.")
-          return(FALSE)
-        }
-      } else { # User chose "No"
-        message("Pease manually install {EBImage}:\nhttps://bioconductor.org/packages/EBImage")
-        return(FALSE)
-      }
-    } else { # Non-interactive session
-      message("Package {EBImage} is required. Install it from:\nhttps://bioconductor.org/packages/EBImage")
-      return(FALSE)
-    }
-  }
-  return(TRUE)
-}
+# ensure_ebimage <- function() {
+#   # Check if EBImage is installed
+#   if (!requireNamespace("EBImage", quietly = TRUE)) {
+#     # Interactive session prompt
+#     if (interactive()) {
+#       cat("Package {EBImage} is required but not installed.\n")
+#       choice <- menu(c("Yes", "No"), title = "Would you like to install it now?")
+#       if (choice == 1) { # User chose "Yes"
+#         # Ensure BiocManager is available for installation
+#         if (!requireNamespace("BiocManager", quietly = TRUE)) {
+#           install.packages("BiocManager", quiet = TRUE)
+#         }
+#         # Install EBImage
+#         BiocManager::install("EBImage", update = FALSE, ask = FALSE, quiet = TRUE)
+#         # Verify successful installation
+#         if (!requireNamespace("EBImage", quietly = TRUE)) {
+#           message("Failed to install {EBImage}. Please try manual installation.")
+#           return(FALSE)
+#         }
+#       } else { # User chose "No"
+#         message("Pease manually install {EBImage}:\nhttps://bioconductor.org/packages/EBImage")
+#         return(FALSE)
+#       }
+#     } else { # Non-interactive session
+#       message("Package {EBImage} is required. Install it from:\nhttps://bioconductor.org/packages/EBImage")
+#       return(FALSE)
+#     }
+#   }
+#   return(TRUE)
+# }

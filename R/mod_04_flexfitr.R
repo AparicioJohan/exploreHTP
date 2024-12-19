@@ -188,7 +188,7 @@ mod_04_flexfitr_ui <- function(id) {
           selectInput(
             inputId = ns("methods"),
             label = "Optimization Methods",
-            choices = list_methods(),
+            choices = c(list_methods(), "ALL"),
             selected = c("subplex"),
             multiple = TRUE,
             width = "90%"
@@ -754,7 +754,7 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
     # AUC Table
     output$predict_table <- renderDT({
       req(output_model())
-      if(input$type_predict == "auc") {
+      if (input$type_predict == "auc") {
         req(input$auc_range)
         req(input$n_points)
         x <- as.numeric(unlist(strsplit(input$auc_range, ",\\s*")))
@@ -770,7 +770,9 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
       } else {
         req(input$point_pred)
         x <- as.numeric(unlist(strsplit(input$point_pred, ",\\s*")))
-        if (length(x) < 1) return(NULL)
+        if (length(x) < 1) {
+          return(NULL)
+        }
         pred_data <- predict(
           object = output_model(),
           x = x,
