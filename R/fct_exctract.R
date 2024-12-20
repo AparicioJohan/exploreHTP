@@ -11,6 +11,7 @@ auto_extract <- function(path_rgb = NULL,
                          time,
                          plot_id = NULL,
                          save_plots = FALSE,
+                         save_masked_plots = FALSE,
                          save_shape = TRUE,
                          time_serie = FALSE,
                          name_experiment = "HARS22_chips",
@@ -20,16 +21,20 @@ auto_extract <- function(path_rgb = NULL,
     stop("Missing argument 'path_rgb'")
   }
   path_rgb <- list.files(path_rgb, pattern = "\\.tif$", full.names = TRUE)
-  if (length(path_rgb) != length(time)) {
+  total_imgs <- length(path_rgb)
+  if (total_imgs != length(time)) {
     stop("Number of images should match length of time.")
   }
   if (!is.null(path_dsm)) {
     path_dsm <- list.files(path_dsm, pattern = "\\.tif$", full.names = TRUE)
   }
-  data_total <- list()
-  tt <- list()
+  data_total <- tt <- list()
+  msg <- ""
+  cli_progress_step("Extracting information {msg}", spinner = TRUE)
   for (i in seq_along(path_rgb)) {
-    message("#------------------- Starting: Mosaic ", i, " ------------------#")
+    cli_h1("Starting: Mosaic {i}")
+    msg <- sprintf(" (%d/%d)", i, total_imgs)
+    cli_progress_update()
     if (!is.null(update_progress)) {
       update_progress(i, length(path_rgb))
     }
@@ -47,83 +52,68 @@ auto_extract <- function(path_rgb = NULL,
     if (save_plots) {
       path <- paste0(path_out, "/", name_experiment, "/plot/", time[i], "/")
       create_folder_if_not_exists(path)
-      crop_grid(
-        mosaic = t1,
-        plot_shape = plot_shape_crop,
-        plot_id = plot_id,
-        output_dir = path
-      )
+      crop_grid(t1, plot_shape_crop, plot_id = plot_id, out_dir = path)
     }
     # Detecting Soil
-    message("Removing Soil")
+    cli_alert_info("Removing soil")
     if (is.null(threshold)) {
       stop("You need to provide a threshold")
-      # t1_no_soil <- calc_mask_auto(t1, index = index_mask, above = mask_above)
+      # t1_ns <- calc_mask_auto(t1, index = index_mask, above = mask_above)
     } else {
       threshold <- as.numeric(threshold)
-      t1_no_soil <- calc_mask(
+      t1_ns <- calc_mask(
         mosaic = t1,
         index = index_mask,
         value = threshold,
-        crop_above = TRUE
+        crop_above = mask_above
       )
     }
+    cli_alert_success("Soil removed with {index_mask}")
     # Save individual plots per date no-soil
-    if (save_plots) {
+    if (save_masked_plots) {
       path <- paste0(path_out, "/", name_experiment, "/plot_mask/", time[i], "/")
       create_folder_if_not_exists(path)
-      crop_grid(
-        mosaic = t1_no_soil$new,
-        plot_shape = plot_shape_crop,
-        plot_id = plot_id,
-        output_dir = path
-      )
+      crop_grid(t1_ns$new, plot_shape_crop, plot_id = plot_id, out_dir = path)
     }
     # Calculating Indices
-    message("Calculating Indices")
-    t1_indices <- calc_index(mosaic = t1_no_soil$new, index = indices)
+    cli_alert_info("Calculating indices")
+    t1_indices <- calc_index(mosaic = t1_ns$new, index = indices)
     # Extracting Information
-    message("Extracting Information")
-    t1_info <- field_extract(
+    cli_alert_info("Extracting information")
+    t1_info <- extract_shp(
       mosaic = t1_indices[[c(bands, indices)]],
-      plot_shape = plot_shape
+      shp = plot_shape
     )
     # Calculating GLI without mask
-    message("Calculating GLI")
     t1_gli <- calc_index(t1, index = "GLI")
     # Extracting GLI Information
-    message("Extracting GLI")
-    t1_info_gli <- field_extract(t1_gli[["GLI"]], plot_shape = plot_shape)
+    t1_info_gli <- extract_shp(t1_gli[["GLI"]], shp = plot_shape)
     # Image Metadata
     tt[[i]] <- t1 |>
       mosaic_info(name = paste0("rgb_", time[i])) |>
       mutate(Time = time[i], .before = image)
     # Area Pixel
-    area_pixel <- field_extract(
-      mosaic = cellSize(t1_no_soil$new),
-      plot_shape = plot_shape,
+    area_pixel <- extract_shp(
+      mosaic = cellSize(t1_ns$new),
+      shp = plot_shape,
       fun = "mean"
     )
     # Total Area m2
     plot_area <- st_area(plot_shape)
     # Canopy
-    message("Canopy Cover")
-    coverage <- calc_area(
-      mosaic = t1_no_soil$new,
-      field_shape = plot_shape,
-      field = plot_id
-    )
+    cli_alert_info("Calculating canopy cover")
+    coverage <- calc_area(mosaic = t1_ns$new, shp = plot_shape, field = plot_id)
     # Data
     dt_tmp <- t1_info |>
       mutate(Time = time[i], .before = all_of(plot_id)) |>
-      mutate(canopy = coverage[["AreaPercentage"]]) |>
-      mutate(total_pixels = coverage[["PixelCount"]]) |>
+      mutate(canopy = coverage[["area_percentage"]]) |>
+      mutate(total_pixels = coverage[["pixel_count"]]) |>
       mutate(plot_area = plot_area) |>
       mutate(area_pixel = area_pixel[["area_mean"]]) |>
       mutate(GLI_2 = t1_info_gli[["GLI_mean"]], .after = GLI_mean)
     # Digital Surface Model (DSM)
     if (!is.null(path_dsm)) {
-      message("Digital Surface Model")
+      cli_alert_info("Digital surface model")
       if (!is.null(area_of_interest)) {
         if (i == 1) {
           dsm_base <- dsm_k <- crop(rast(path_dsm[1]), area_of_interest)
@@ -148,22 +138,22 @@ auto_extract <- function(path_rgb = NULL,
       ) |>
         mutate(Time = time[i], .before = image)
       # Canopy Height Model (CHM) and Canopy Volume Model (CVM)
-      message("Canopy Height Model")
+      cli_alert_info("Canopy height model")
       chm <- calc_height(dsm_base, dsm_k)
-      chm_rem_soil <- calc_mask(chm, mask = t1_no_soil$mask)
-      ph <- field_extract(chm_rem_soil$new$height, plot_shape = t1_info)
+      chm_rem_soil <- calc_mask(chm, mask = t1_ns$mask)
+      ph <- extract_shp(chm_rem_soil$new$height, shp = t1_info)
       names(ph)[names(ph) == "height_mean"] <- "ph"
-      ph_vol <- field_extract(
+      ph_vol <- extract_shp(
         mosaic = chm_rem_soil$new$volume,
-        plot_shape = ph,
+        shp = ph,
         fun = "sum"
       )
       names(ph_vol)[names(ph_vol) == "volume_sum"] <- "volume"
       # Data
       dt_tmp <- ph_vol |>
         mutate(Time = time[i], .before = all_of(plot_id)) |>
-        mutate(canopy = coverage[["AreaPercentage"]]) |>
-        mutate(total_pixel = coverage[["PixelCount"]]) |>
+        mutate(canopy = coverage[["area_percentage"]]) |>
+        mutate(total_pixel = coverage[["pixel_count"]]) |>
         mutate(plot_area = plot_area) |>
         mutate(area_pixel = area_pixel[["area_mean"]]) |>
         mutate(volume = total_pixel * area_pixel * ph) |>
@@ -178,16 +168,13 @@ auto_extract <- function(path_rgb = NULL,
       dt_tmp <- dt_tmp |>
         mutate(Trial = name_experiment, .before = Time)
       names(dt_tmp) <- gsub("_mean", "", names(dt_tmp))
-      st_write(
-        obj = dt_tmp,
-        dsn = paste0(path, "shape_", name_experiment, ".gpkg"),
-        layer = time[i],
-        append = FALSE,
-        quiet = TRUE
-      )
+      w_save <- paste0(path, "shape_", name_experiment, ".gpkg")
+      st_write(dt_tmp, w_save, layer = time[i], append = FALSE, quiet = TRUE)
+      cli_alert_info(".gpkg file exported: {.path {w_save}}.")
     }
-    message("#------------------ Completed: Mosaic ", i, " ------------------#")
+    cli_alert_success("Extraction succeded")
   }
+  cli_h1("")
   # Data with all indices across dates
   dt <- do.call(what = rbind, args = data_total) |>
     as.data.frame() |>
@@ -198,12 +185,9 @@ auto_extract <- function(path_rgb = NULL,
   # Saving data
   path <- paste0(path_out, "/", name_experiment, "/extracted_data/")
   create_folder_if_not_exists(path)
-  dt |>
-    write.csv(
-      file = paste0(path, name_experiment, ".csv"),
-      row.names = FALSE,
-      na = ""
-    )
+  w_save <- paste0(path, name_experiment, ".csv")
+  write.csv(dt, file = w_save, row.names = FALSE, na = "")
+  cli_alert_info("CSV file exported: {.path {w_save}}.")
   # Metadata
   info_imgs <- as.data.frame(do.call(what = rbind, args = tt))
   # Plot Time Series
@@ -213,7 +197,9 @@ auto_extract <- function(path_rgb = NULL,
       plot_id = plot_id,
       path_out = path_out,
       name_experiment = name_experiment,
-      base_size = 14
+      base_size = 14,
+      save_plots = save_plots,
+      save_masked_plots = save_masked_plots
     )
   }
   return(list(dt = dt, info = info_imgs))
@@ -231,18 +217,20 @@ mosaic_info <- function(mosaic, name = "t1") {
   return(info_imgs)
 }
 
+#' @import cli
 create_folder_if_not_exists <- function(path) {
   if (!dir.exists(path)) {
     dir.create(path, recursive = TRUE)
-    message("Folder created: ", path)
+    cli_alert_info("Folder created: {.path {path}}.")
   }
 }
 
 crop_grid <- function(mosaic,
-                      plot_shape,
+                      shp,
                       plot_id = NULL,
-                      output_dir = "./") {
-  message("Cropping...")
+                      out_dir = "./") {
+  msgs <- ""
+  cli_progress_step("Saving mosaics {msgs}", spinner = TRUE)
   stars_object <- mosaic
   if (class(mosaic) %in% c("RasterStack", "RasterLayer", "RasterBrick")) {
     mosaic <- terra::rast(mosaic)
@@ -254,11 +242,14 @@ crop_grid <- function(mosaic,
   if (!sf::st_is_longlat(stars_object) && nbands > 2) {
     stars_object <- stars::st_warp(stars_object, crs = 4326)
   }
-  if (!sf::st_is_longlat(plot_shape)) {
-    plot_shape <- sf::st_transform(plot_shape, crs = 4326)
+  if (!sf::st_is_longlat(shp)) {
+    shp <- sf::st_transform(shp, crs = 4326)
   }
-  for (i in seq_len(nrow(plot_shape))) {
-    grid_poly <- plot_shape[i, ]
+  total_ids <- nrow(shp)
+  for (i in seq_len(total_ids)) {
+    msgs <- sprintf(" (%d/%d)", i, total_ids)
+    cli_progress_update()
+    grid_poly <- shp[i, ]
     grid_poly <- sf::st_transform(grid_poly, crs = sf::st_crs(stars_object))
     plot_raster <- sf::st_crop(stars_object, grid_poly)
     if (nbands > 2) {
@@ -269,8 +260,8 @@ crop_grid <- function(mosaic,
       plot_raster <- stars::st_warp(plot_raster, crs = sf::st_crs(mosaic))
       plot_raster[is.na(plot_raster)] <- NA
     }
-    file_name <- paste0("ID_", plot_shape[[plot_id]][i], ".tif")
-    file_path <- file.path(output_dir, file_name)
+    file_name <- paste0("ID_", shp[[plot_id]][i], ".tif")
+    file_path <- file.path(out_dir, file_name)
     plot_raster <- methods::as(plot_raster, "Raster")
     plot_raster <- terra::rast(plot_raster)
     terra::writeRaster(plot_raster, file_path, overwrite = TRUE)
@@ -360,61 +351,72 @@ plot_time_series <- function(plot_shape,
                              plot_id,
                              path_out,
                              name_experiment,
-                             base_size = 14) {
+                             base_size = 14,
+                             save_plots = TRUE,
+                             save_masked_plots = TRUE) {
+  if (!save_plots & !save_masked_plots) {
+    return()
+  }
   unique_ids <- sort(unique(plot_shape[[plot_id]]))
+  msgs <- ""
+  k <- 1
+  cli_progress_step("Saving time series {msgs}", spinner = TRUE)
   for (w in unique_ids) {
+    msgs <- sprintf(" (%d/%d)", k, length(unique_ids))
+    cli_progress_update()
     path_shape <- paste0(
       path_out, "/", name_experiment,
       "/shape_files/shape_", name_experiment, ".gpkg"
     )
-    p0 <- plot_organizer(
-      id = w,
-      plot_id = plot_id,
-      path = paste0(path_out, "/", name_experiment, "/plot/"),
-      path_shape = path_shape,
-      base_size = 14
-    )
-    create_folder_if_not_exists(
-      path = paste0(path_out, "/", name_experiment, "/plots_time/")
-    )
-    ggsave(
-      filename = paste0(
-        path_out, "/", name_experiment, "/plots_time/ID_", w, ".png"
-      ),
-      plot = p0$figure,
-      units = "in",
-      dpi = 300,
-      width = 8,
-      height = 6
-    ) |> suppressWarnings()
-    p1 <- plot_organizer(
-      id = w,
-      plot_id = plot_id,
-      path = paste0(path_out, "/", name_experiment, "/plot_mask/"),
-      path_shape = path_shape,
-      base_size = 14
-    )
-    ggsave(
-      filename = paste0(
-        path_out, "/", name_experiment, "/plots_time/ID_", w, "_mask.png"
-      ),
-      plot = p1$figure,
-      units = "in",
-      dpi = 300,
-      width = 8,
-      height = 6
-    ) |> suppressWarnings()
+    if (save_plots) {
+      p0 <- plot_organizer(
+        id = w,
+        plot_id = plot_id,
+        path = paste0(path_out, "/", name_experiment, "/plot/"),
+        path_shape = path_shape,
+        base_size = 14
+      )
+      create_folder_if_not_exists(
+        path = paste0(path_out, "/", name_experiment, "/plots_time/")
+      )
+      ggsave(
+        filename = paste0(
+          path_out, "/", name_experiment, "/plots_time/ID_", w, ".png"
+        ),
+        plot = p0$figure,
+        units = "in",
+        dpi = 300,
+        width = 8,
+        height = 6
+      ) |> suppressWarnings()
+    }
+    if (save_masked_plots) {
+      p1 <- plot_organizer(
+        id = w,
+        plot_id = plot_id,
+        path = paste0(path_out, "/", name_experiment, "/plot_mask/"),
+        path_shape = path_shape,
+        base_size = 14
+      )
+      ggsave(
+        filename = paste0(
+          path_out, "/", name_experiment, "/plots_time/ID_", w, "_mask.png"
+        ),
+        plot = p1$figure,
+        units = "in",
+        dpi = 300,
+        width = 8,
+        height = 6
+      ) |> suppressWarnings()
+    }
+    k <- k + 1
   }
-  message("Time series plots saved successfully.")
+  cli_alert_success("Time series plots saved successfully.")
 }
 
 
 
-field_extract <- function(mosaic,
-                          plot_shape,
-                          fun = "mean",
-                          progress = FALSE) {
-  message("Starting data extraction per plot ...")
+extract_shp <- function(mosaic, shp, fun = "mean", progress = FALSE) {
   if (is.null(mosaic)) {
     stop("The input 'mosaic' object is NULL.")
   }
@@ -442,7 +444,7 @@ field_extract <- function(mosaic,
   }
   plot_info <- exactextractr::exact_extract(
     x = mosaic,
-    y = plot_shape,
+    y = shp,
     fun = fun,
     progress = progress,
     force_df = TRUE
@@ -452,15 +454,15 @@ field_extract <- function(mosaic,
   } else {
     colnames(plot_info) <- paste0(names(mosaic), "_", fun)
   }
-  out <- plot_shape |>
+  out <- shp |>
     cbind(plot_info[, !colnames(plot_info) %in% "ID", drop = FALSE])
   return(out)
 }
 
 
-calc_area <- function(mosaic, field_shape, field = NULL) {
-  # Convert field_shape to terra vector
-  terra_vect <- vect(field_shape)
+calc_area <- function(mosaic, shp, field = NULL) {
+  # Convert shp to terra vector
+  terra_vect <- vect(shp)
   # Determine the rasterization field
   raster_field <- if (is.null(field)) "PlotID" else field
   # Rasterize using the specified field
@@ -480,12 +482,12 @@ calc_area <- function(mosaic, field_shape, field = NULL) {
   )
   # Calculate area percentage
   area_percentage <- round(area_pixel / total_pixelcount * 100, 3)
-  names(area_percentage) <- "AreaPercentage"
-  names(area_pixel) <- "PixelCount"
+  names(area_percentage) <- "area_percentage"
+  names(area_pixel) <- "pixel_count"
   # Combine results with geometry
   result <- cbind(
     sf::st_as_sf(as.polygons(terra_rast)),
-    AreaPixel = area_pixel,
+    area_pixel = area_pixel,
     area_percentage
   )
   return(result)

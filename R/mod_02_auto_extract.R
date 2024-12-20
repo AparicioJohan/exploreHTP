@@ -23,6 +23,13 @@ mod_02_auto_extract_ui <- function(id) {
           right = TRUE
         ),
         shinyWidgets::materialSwitch(
+          inputId = ns("save_masked_plots"),
+          label = "Save Masked Plots",
+          value = FALSE,
+          status = "primary",
+          right = TRUE
+        ),
+        shinyWidgets::materialSwitch(
           inputId = ns("time_serie"),
           label = "Save Time Series",
           value = FALSE,
@@ -49,7 +56,7 @@ mod_02_auto_extract_ui <- function(id) {
             checkboxInput(
               inputId = ns("mask_above"),
               label = "Mask above?",
-              value = FALSE,
+              value = TRUE,
               width = "100%"
             ),
             textInput(
@@ -316,6 +323,7 @@ mod_02_auto_extract_server <- function(id) {
         time <- as.numeric(unlist(strsplit(input$days, ",\\s*")))
         plot_id <- input$plot_id
         save_plots <- input$save_plots
+        save_masked_plots <- input$save_masked_plots
         save_shape <- TRUE
         time_serie <- input$time_serie
         name_experiment <- input$name_experiment
@@ -332,13 +340,13 @@ mod_02_auto_extract_server <- function(id) {
               # If user clicks confirm
               shinytoastr::toastr_success(
                 title = "Action Confirmed!",
-                message = "Starting Extraction",
+                message = "Please wait ...",
                 position = "bottom-right",
                 showMethod = "slideDown",
                 hideMethod = "hide",
                 hideEasing = "linear"
               )
-              w$show()
+              # w$show()
               tryCatch(
                 {
                   results({
@@ -356,11 +364,12 @@ mod_02_auto_extract_server <- function(id) {
                       time = time,
                       plot_id = plot_id,
                       save_plots = save_plots,
+                      save_masked_plots = save_masked_plots,
                       save_shape = save_shape,
                       time_serie = time_serie,
                       name_experiment = name_experiment,
                       path_out = path_out,
-                      update_progress = update_progress
+                      update_progress = NULL
                     )
                   })
                 },
@@ -375,7 +384,7 @@ mod_02_auto_extract_server <- function(id) {
                   )
                 }
               )
-              w$hide()
+              # w$hide()
             } else {
               # If user clicks cancel
               shinytoastr::toastr_warning(

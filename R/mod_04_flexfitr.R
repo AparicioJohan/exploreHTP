@@ -188,7 +188,7 @@ mod_04_flexfitr_ui <- function(id) {
           selectInput(
             inputId = ns("methods"),
             label = "Optimization Methods",
-            choices = c(list_methods(), "ALL"),
+            choices = c(unname(list_methods()), "ALL"),
             selected = c("subplex"),
             multiple = TRUE,
             width = "90%"

@@ -2,6 +2,7 @@
 
 export(run_app)
 import(bslib)
+import(cli)
 import(exactextractr)
 import(flexFitR)
 import(ggplot2)
