@@ -29,7 +29,7 @@ auto_extract <- function(path_rgb = NULL,
     path_dsm <- list.files(path_dsm, pattern = "\\.tif$", full.names = TRUE)
   }
   data_total <- tt <- list()
-  msg <- ""
+  msg <- "..."
   cli_progress_step("Extracting information {msg}", spinner = TRUE)
   for (i in seq_along(path_rgb)) {
     cli_h1("Starting: Mosaic {i}")
@@ -39,11 +39,7 @@ auto_extract <- function(path_rgb = NULL,
       update_progress(i, length(path_rgb))
     }
     # If area of interest is provided
-    if (!is.null(area_of_interest)) {
-      t1 <- crop(rast(path_rgb[i]), area_of_interest)
-    } else {
-      t1 <- rast(path_rgb[i])
-    }
+    t1 <- read_rast(path_rgb[i], area_of_interest)
     # Shape 2 is used to crop plots
     if (is.null(plot_shape_crop)) {
       plot_shape_crop <- plot_shape
@@ -85,6 +81,7 @@ auto_extract <- function(path_rgb = NULL,
       shp = plot_shape
     )
     # Calculating GLI without mask
+    cli_alert_info("Calculating indice without mask")
     t1_gli <- calc_index(t1, index = "GLI")
     # Extracting GLI Information
     t1_info_gli <- extract_shp(t1_gli[["GLI"]], shp = plot_shape)
@@ -114,18 +111,10 @@ auto_extract <- function(path_rgb = NULL,
     # Digital Surface Model (DSM)
     if (!is.null(path_dsm)) {
       cli_alert_info("Digital surface model")
-      if (!is.null(area_of_interest)) {
-        if (i == 1) {
-          dsm_base <- dsm_k <- crop(rast(path_dsm[1]), area_of_interest)
-        } else {
-          dsm_k <- crop(rast(path_dsm[i]), area_of_interest)
-        }
+      if (i == 1) {
+        dsm_base <- dsm_k <- read_rast(path_dsm[i], area_of_interest)
       } else {
-        if (i == 1) {
-          dsm_base <- dsm_k <- rast(path_dsm[1])
-        } else {
-          dsm_k <- rast(path_dsm[i])
-        }
+        dsm_k <- read_rast(path_dsm[i], area_of_interest)
       }
       # Check CRS
       if (crs(dsm_base) != crs(dsm_k)) {
@@ -201,6 +190,7 @@ auto_extract <- function(path_rgb = NULL,
       save_plots = save_plots,
       save_masked_plots = save_masked_plots
     )
+    cli_alert_success("Time series plots saved successfully.")
   }
   return(list(dt = dt, info = info_imgs))
 }
@@ -229,7 +219,7 @@ crop_grid <- function(mosaic,
                       shp,
                       plot_id = NULL,
                       out_dir = "./") {
-  msgs <- ""
+  msgs <- "..."
   cli_progress_step("Saving mosaics {msgs}", spinner = TRUE)
   stars_object <- mosaic
   if (class(mosaic) %in% c("RasterStack", "RasterLayer", "RasterBrick")) {
@@ -358,7 +348,7 @@ plot_time_series <- function(plot_shape,
     return()
   }
   unique_ids <- sort(unique(plot_shape[[plot_id]]))
-  msgs <- ""
+  msgs <- "..."
   k <- 1
   cli_progress_step("Saving time series {msgs}", spinner = TRUE)
   for (w in unique_ids) {
@@ -411,7 +401,6 @@ plot_time_series <- function(plot_shape,
     }
     k <- k + 1
   }
-  cli_alert_success("Time series plots saved successfully.")
 }
 
 
@@ -503,6 +492,8 @@ calc_index <- function(mosaic,
                        index = "HUE") {
   catalog <- exploreHTP::indices
   num_band <- nlyr(mosaic)
+  msgs <- "..."
+  cli_progress_step("Calculating indice {msgs}", spinner = TRUE)
   if (num_band < 3) {
     stop("At least 3 bands (RGB) are necessary to calculate indices")
   }
@@ -524,7 +515,9 @@ calc_index <- function(mosaic,
     stop(paste0(stg, " needs NIR/RedEdge band to be calculated"))
   }
   B <- mosaic[[blue]]
+  cli_progress_update()
   G <- mosaic[[green]]
+  cli_progress_update()
   R <- mosaic[[red]]
   names(mosaic)[c(blue, green, red)] <- c("Blue", "Green", "Red")
   if (!is.null(rededge)) {
@@ -537,6 +530,8 @@ calc_index <- function(mosaic,
   }
   for (i in seq_along(index)) {
     value <- index[i]
+    msgs <- sprintf("%s (%d/%d)", value, i, length(index))
+    cli_progress_update()
     new_layer <- eval(parse(text = paste(catalog$eq[catalog$index == value])))
     mosaic <- append(mosaic, new_layer)
     names(mosaic)[num_band + i] <- as.character(value)
@@ -555,6 +550,7 @@ calc_mask <- function(mosaic,
                       crop_above = TRUE,
                       mask = NULL) {
   num_band <- nlyr(mosaic)
+  cli_progress_step("Masking images ...", spinner = TRUE)
   if (is.null(mask)) {
     mr <- calc_index(
       mosaic = mosaic,
@@ -624,4 +620,13 @@ calc_height <- function(dsm_before, dsm_after) {
   names(volume) <- "volume"
   mosaic <- append(height, volume)
   return(mosaic)
+}
+
+read_rast <- function(path, area_of_interest = NULL) {
+  if (!is.null(area_of_interest)) {
+    img <- crop(rast(path), area_of_interest)
+  } else {
+    img <- rast(path)
+  }
+  return(img)
 }
