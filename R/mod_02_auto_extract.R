@@ -166,7 +166,7 @@ mod_02_auto_extract_ui <- function(id) {
           width = 4,
           # Text input for experiment name
           textInput(
-            inputId = ns("name_experiment"),
+            inputId = ns("trial_name"),
             label = "Experiment Name:",
             value = "HARS22_chips",
             width = "90%"
@@ -326,7 +326,7 @@ mod_02_auto_extract_server <- function(id) {
         save_masked_plots <- input$save_masked_plots
         save_shape <- TRUE
         time_serie <- input$time_serie
-        name_experiment <- input$name_experiment
+        trial_name <- input$trial_name
         shinyalert(
           title = "Are you sure?",
           text = "Do you want to proceed with this action?",
@@ -367,7 +367,7 @@ mod_02_auto_extract_server <- function(id) {
                       save_masked_plots = save_masked_plots,
                       save_shape = save_shape,
                       time_serie = time_serie,
-                      name_experiment = name_experiment,
+                      trial_name = trial_name,
                       path_out = path_out,
                       update_progress = NULL
                     )
