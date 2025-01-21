@@ -506,15 +506,16 @@ calc_area <- function(mosaic, shp, field = NULL) {
   if (is.null(shp)) {
     stop("The input 'shp' (shapefile or spatial object) cannot be NULL.")
   }
-  # Convert shp to terra vector
-  terra_vect <- terra::vect(shp)
   # Determine the rasterization field
   raster_field <- if (is.null(field)) stop("field can not be NULL") else field
-  if (!(raster_field %in% names(terra_vect))) {
+  if (!(raster_field %in% names(shp))) {
     stop(paste(
       "The field", raster_field, "is not found in the shapefile attributes."
     ))
   }
+  shp[[field]] <- as.character(shp[[field]])
+  # Convert shp to terra vector
+  terra_vect <- terra::vect(shp)
   # Rasterize using the specified field
   terra_rast <- terra::rasterize(terra_vect, mosaic, field = raster_field)
   polygons_sf <- sf::st_as_sf(terra::as.polygons(terra_rast))
