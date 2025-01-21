@@ -391,7 +391,7 @@ plot_time_series <- function(plot_shape,
                              base_size = 14,
                              save_plots = TRUE,
                              save_masked_plots = TRUE) {
-  if (!save_plots & !save_masked_plots) {
+  if (!save_plots && !save_masked_plots) {
     return()
   }
   unique_ids <- sort(unique(plot_shape[[plot_id]]))
@@ -523,13 +523,15 @@ calc_area <- function(mosaic, shp, field = NULL) {
     x = terra_rast,
     y = polygons_sf,
     fun = "count",
-    force_df = TRUE
+    force_df = TRUE,
+    progress = FALSE
   )
   area_pixel <- exactextractr::exact_extract(
     x = mosaic[[1]],
     y = polygons_sf,
     fun = "count",
-    force_df = TRUE
+    force_df = TRUE,
+    progress = FALSE
   )
   # Calculate area percentage
   area_percentage <- round(area_pixel / total_pixel_count * 100, 3)
