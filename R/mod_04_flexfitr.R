@@ -515,7 +515,7 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
               tryCatch(
                 {
                   data <- dt_reactive() |>
-                    flexFitR:::transform(
+                    series_mutate(
                       x = input$select_x,
                       y = input$select_y,
                       grp = input$group,

@@ -1,3 +1,54 @@
+#' Extract Plot-Level Information from Field Trial Images
+#'
+#' This function processes and analyzes images from field trials to extract plot-level data, including vegetation indices, canopy cover, and other metrics. It supports images collected over time and optionally includes DSM data for calculating canopy height and volume.
+#'
+#' @param path_rgb Character. Path to the directory containing RGB images (GeoTIFF format).
+#' @param path_dsm Character (optional). Path to the directory containing DSM images (GeoTIFF format). Required for canopy height and volume calculations.
+#' @param area_of_interest `sf` or `Spatial` object. Defines the region of interest for analysis.
+#' @param plot_shape `sf` or `Spatial` object. Shapefile defining the experimental plots.
+#' @param plot_shape_crop `sf` or `Spatial` object (optional). Cropped shapefile for experimental plots. Defaults to `plot_shape`.
+#' @param indices Character vector. Vegetation indices to calculate. Default is `c("NGRDI", "BGI", "GLI")`.
+#' @param bands Character vector. Color bands to use. Default is `c("Red", "Green", "Blue")`.
+#' @param index_mask Character. Index used for soil masking. Default is `"HUE"`.
+#' @param mask_above Logical. If `TRUE`, masks areas with values above the threshold; otherwise, masks below. Default is `TRUE`.
+#' @param threshold Numeric. Threshold value for soil masking. Must be provided.
+#' @param time Character vector. Timestamps corresponding to each image in `path_rgb`.
+#' @param plot_id Character (optional). Column name in `plot_shape` representing unique plot identifiers.
+#' @param save_plots Logical. If `TRUE`, saves individual plot-level images for each date. Default is `FALSE`.
+#' @param save_masked_plots Logical. If `TRUE`, saves soil-masked plot-level images for each date. Default is `FALSE`.
+#' @param save_shape Logical. If `TRUE`, saves the extracted data as shapefiles. Default is `TRUE`.
+#' @param time_serie Logical. If `TRUE`, generates time-series plots. Default is `FALSE`.
+#' @param trial_name Character. Name of the trial for naming output files. Default is `"HARS22_chips"`.
+#' @param path_out Character. Directory path where output files will be saved.
+#' @param update_progress Function (optional). Callback function to track progress, receiving current and total image counts as arguments.
+#'
+#' @return A list containing:
+#'   \item{dt}{A data frame with extracted metrics for each plot across all dates.}
+#'   \item{info}{A data frame with metadata about the images processed.}
+#'
+#' @details
+#' The function performs the following steps:
+#' 1. Reads and processes RGB and optionally DSM images.
+#' 2. Applies soil masking using the specified index and threshold.
+#' 3. Calculates vegetation indices and extracts plot-level data.
+#' 4. Optionally calculates canopy height and volume using DSM data.
+#' 5. Saves extracted data and optional visualizations to the specified output directory.
+#'
+#' @examples
+#' \dontrun{
+#' auto_extract(
+#'   path_rgb = "path/to/rgb/images",
+#'   path_dsm = "path/to/dsm/images",
+#'   area_of_interest = aoi_sf,
+#'   plot_shape = plots_sf,
+#'   indices = c("NGRDI", "BGI"),
+#'   time = c("2023-05-01", "2023-06-01"),
+#'   threshold = 0.2,
+#'   path_out = "output/directory"
+#' )
+#' }
+#'
+#' @export
 auto_extract <- function(path_rgb = NULL,
                          path_dsm = NULL,
                          area_of_interest,
@@ -8,13 +59,13 @@ auto_extract <- function(path_rgb = NULL,
                          index_mask = "HUE",
                          mask_above = TRUE,
                          threshold = 0,
-                         time,
+                         time = NULL,
                          plot_id = NULL,
                          save_plots = FALSE,
                          save_masked_plots = FALSE,
                          save_shape = TRUE,
                          time_serie = FALSE,
-                         trial_name = "HARS22_chips",
+                         trial_name = "test",
                          path_out = NULL,
                          update_progress = NULL) {
   if (is.null(path_rgb)) {

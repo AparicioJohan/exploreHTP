@@ -16,7 +16,7 @@ Imports:
     dplyr,
     DT,
     exactextractr,
-    flexFitR (>= 0.1.0),
+    flexFitR,
     ggplot2,
     golem,
     grDevices,
@@ -37,8 +37,6 @@ Imports:
     terra,
     utils,
     waiter
-Remotes: 
-    AparicioJohan/flexFitR
 Config/testthat/edition: 3
 Encoding: UTF-8
 LazyData: true
