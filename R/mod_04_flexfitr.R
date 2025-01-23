@@ -177,9 +177,14 @@ mod_04_flexfitr_ui <- function(id) {
                   inputId = ns("view_fun"),
                   icon = icon("eye"),
                   label = "View"
+                ),
+                actionLink(
+                  inputId = ns("add_fun"),
+                  icon = icon("plus"),
+                  label = "Add"
                 )
               ),
-              choices = list_funs(),
+              choices = c(list_funs(), "fn_custom"),
               selected = c("fn_lin"),
               multiple = FALSE,
               width = "90%"
@@ -187,7 +192,14 @@ mod_04_flexfitr_ui <- function(id) {
           ),
           selectInput(
             inputId = ns("methods"),
-            label = "Optimization Methods",
+            label = tagList(
+              "Optimization Methods",
+              actionLink(
+                inputId = ns("view_methods"),
+                icon = icon("eye"),
+                label = "View"
+              )
+            ),
             choices = c(unname(list_methods()), "ALL"),
             selected = c("subplex"),
             multiple = TRUE,
@@ -330,7 +342,7 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
         tags$div(
           style = "display: flex; align-items: center; gap: 10px;",
           strong("Names:"),
-          em(paste0(args, collapse = ", "))
+          em(paste0(args, collapse = "; "))
         ),
         textAreaInput(
           inputId = ns("initial_values"),
@@ -346,20 +358,46 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
           width = "100%"
         ),
         textInput(
-          inputId = ns("upper_limit"),
-          label = helpText("Upper Limit (Optional):"),
-          value = "-Inf",
-          width = "100%"
-        ),
-        textInput(
           inputId = ns("lower_limit"),
           label = helpText("Lower Limit (Optional):"),
           value = "+Inf",
+          width = "100%"
+        ),
+        textInput(
+          inputId = ns("upper_limit"),
+          label = helpText("Upper Limit (Optional):"),
+          value = "-Inf",
           width = "100%"
         )
       )
     }) |>
       bindEvent(input$functions, dt_reactive())
+
+    # Modal Methods
+    observeEvent(input$view_methods, {
+      req(input$methods)
+      showModal(modalDialog(
+        title = tagList(icon = icon("chart-line"), "View Methods"),
+        size = "l",
+        easyClose = TRUE,
+        footer = NULL,
+        DTOutput(ns("dataset_methods"))
+      ))
+    })
+    output$dataset_methods <- renderDT({
+      list <- list_methods()
+      dt <- data.frame(
+        method = list,
+        box_contrains = list %in% list_methods(bounds = TRUE),
+        package = names(list)
+      )
+      datatable(
+        data = dt,
+        options = list(pageLength = 5, autoWidth = FALSE),
+        fillContainer = FALSE
+      )
+    })
+
 
     # Modal Functions
     observeEvent(input$view_fun, {
@@ -445,6 +483,61 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
           paper_bgcolor = "transparent"
         )
     })
+
+    # Add function
+    func_env <- reactiveValues(fn = NULL)
+
+    observeEvent(input$add_fun, {
+      showModal(modalDialog(
+        title = tagList(icon = icon("chart-line"), "Add Regression Function"),
+        size = "l",
+        easyClose = TRUE,
+        footer = NULL,
+        textAreaInput(
+          inputId = ns("func_input"),
+          label = "New function:",
+          value = "function(t, a, b, c) a*t^3 + b*t^2 + c*t",
+          width = "100%"
+        ),
+        actionButton(
+          inputId = ns("submit_fun"),
+          label = "Submit Function",
+          icon = icon("thumbs-up")
+        ),
+        br(),
+        br(),
+        verbatimTextOutput(ns("output_submit"))
+      ))
+    })
+
+    observeEvent(input$functions, {
+      if (!exists("fn_custom")) {
+        default <- "fn_custom <- function(t, k, w) k*t^3 + w*t^2"
+        eval(parse(text = default), envir = .GlobalEnv)
+      }
+    })
+
+    observeEvent(input$submit_fun, {
+      user_code <- paste0("fn_custom <- ", input$func_input)
+      tryCatch(
+        {
+          eval(parse(text = user_code), envir = .GlobalEnv)
+          func_env$fn <- eval(parse(text = user_code))
+          output$output_submit <- renderText(
+            expr = paste0(
+              "Function successfully loaded!",
+              "\n",
+              "Go back to Regression Function and pick 'fn_custom'",
+              "\n", "Note: Parallel a custom function does not work yet."
+            )
+          )
+        },
+        error = function(e) {
+          output$output_submit <- renderText(paste("Error:", e$message))
+        }
+      )
+    })
+
 
 
     # Modal Data

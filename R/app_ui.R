@@ -18,7 +18,7 @@ app_ui <- function(request) {
           class = "me-3",
           alt = "exploreHTP logo"
         ),
-        "exploreHTP"
+        "exploreHTP 1.0.0"
       ),
       theme = bs_theme(preset = "shiny", version = 5),
       collapsible = TRUE,
