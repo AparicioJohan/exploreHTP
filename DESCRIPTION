@@ -1,6 +1,6 @@
 Package: exploreHTP
 Title: Explore High Throughtput Phenotypic Data
-Version: 0.0.1
+Version: 1.0.0
 Authors@R: 
     person("Johan", "Aparicio", , "johanstevenapa@gmail.com", role = c("aut", "cre"))
 Description: Web application for high throughtput phenotyping exploration.

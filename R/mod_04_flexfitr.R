@@ -157,7 +157,14 @@ mod_04_flexfitr_ui <- function(id) {
           ),
           selectInput(
             inputId = ns("select_y"),
-            label = "Select y-variable:",
+            label = tagList(
+              "Select y-variable:",
+              actionLink(
+                inputId = ns("view_scatter"),
+                icon = icon("eye"),
+                label = "View"
+              )
+            ),
             choices = c("Canopy", "GLI"),
             selected = c("Canopy"),
             multiple = FALSE,
@@ -373,6 +380,58 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
     }) |>
       bindEvent(input$functions, dt_reactive())
 
+    # Modal Scatter
+    observeEvent(input$view_scatter, {
+      req(dt_reactive())
+      showModal(modalDialog(
+        title = tagList(icon = icon("chart-line"), "View Scatter"),
+        size = "l",
+        easyClose = TRUE,
+        footer = NULL,
+        plotlyOutput(ns("plot_scatter"))
+      ))
+    })
+
+    output$plot_scatter <- renderPlotly({
+      req(dt_reactive())
+      req(input$select_x)
+      req(input$select_y)
+      common <- if (dark_mode() == "dark") "white" else "#1D1F21"
+      obj <- dt_reactive() |>
+        ggplot(
+          mapping = aes(
+            x = .data[[input$select_x]],
+            y = .data[[input$select_y]]
+          )
+        ) +
+        theme_classic(base_size = 14) +
+        labs(x = "x-variable", y = "y-variable") +
+        theme(
+          panel.background = element_rect(fill = "transparent", color = NA),
+          plot.background = element_rect(fill = "transparent", color = NA),
+          plot.title = element_text(colour = common),
+          axis.title.x = element_text(colour = common),
+          axis.text.x = element_text(colour = common),
+          axis.title.y = element_text(colour = common),
+          axis.text.y = element_text(colour = common),
+          strip.text = element_text(colour = common),
+          legend.position = "none"
+        )
+      if (is.null(input$group)) {
+      obj <- obj + geom_point(alpha = 0.1)
+      } else {
+        obj <- obj +
+          geom_point(aes(group = .data[[input$group]]), alpha = 0.1)
+      }
+      plotly::ggplotly(obj) |>
+        plotly::config(displayModeBar = FALSE) |>
+        plotly::layout(
+          font = list(family = "Open Sans", color = common),
+          plot_bgcolor = "transparent",
+          paper_bgcolor = "transparent"
+        )
+    })
+
     # Modal Methods
     observeEvent(input$view_methods, {
       req(input$methods)
@@ -537,8 +596,6 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
         }
       )
     })
-
-
 
     # Modal Data
     output$data_table <- renderDT({
