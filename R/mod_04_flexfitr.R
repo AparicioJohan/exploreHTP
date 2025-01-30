@@ -418,7 +418,7 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
           legend.position = "none"
         )
       if (is.null(input$group)) {
-      obj <- obj + geom_point(alpha = 0.1)
+        obj <- obj + geom_point(alpha = 0.1)
       } else {
         obj <- obj +
           geom_point(aes(group = .data[[input$group]]), alpha = 0.1)
@@ -875,12 +875,29 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
       metrics_table <- metrics(output_model())
       tables_list$metrics <- metrics_table
       dt <- metrics_table |>
+        dplyr::mutate_if(is.numeric, round, 3) |>
+        dplyr::select(-n)
+      datatable(
+        data = dt,
+        options = list(pageLength = 5, autoWidth = FALSE),
+        filter = "top",
+        fillContainer = FALSE,
+        rownames = FALSE
+      )
+    })
+
+    # Info Criteria Table
+    output$criteria_table <- renderDT({
+      req(output_model())
+      criteria <- info_criteria(output_model())
+      tables_list$info_criteria <- criteria
+      dt <- criteria |>
         dplyr::mutate_if(is.numeric, round, 3)
       datatable(
         data = dt,
         options = list(pageLength = 5, autoWidth = FALSE),
         filter = "top",
-        fillContainer = TRUE,
+        fillContainer = FALSE,
         rownames = FALSE
       )
     })
@@ -1052,7 +1069,25 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
           ),
           nav_panel(
             "Metrics",
-            card_body(DTOutput(ns("metrics_table")))
+            card_body(
+              radioButtons(
+                inputId = ns("type_metrics"),
+                label = NULL,
+                inline = TRUE,
+                choices = c("Info-Criteria", "Residual-Based"),
+                selected = "Info-Criteria"
+              ),
+              conditionalPanel(
+                condition = "input.type_metrics == 'Info-Criteria'",
+                ns = ns,
+                DTOutput(ns("criteria_table"))
+              ),
+              conditionalPanel(
+                condition = "input.type_metrics == 'Residual-Based'",
+                ns = ns,
+                DTOutput(ns("metrics_table"))
+              )
+            )
           ),
           nav_panel(
             "Predictions",
@@ -1126,6 +1161,7 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
         req(tables_list$params)
         req(tables_list$coef)
         req(tables_list$metrics)
+        req(tables_list$info_criteria)
         req(tables_list$prediction)
         wb <- createWorkbook()
         # Add sheets and data
@@ -1135,6 +1171,8 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
         writeData(wb, "coefficients", tables_list$coef)
         addWorksheet(wb, "metrics")
         writeData(wb, "metrics", tables_list$metrics)
+        addWorksheet(wb, "info_criteria")
+        writeData(wb, "info_criteria", tables_list$info_criteria)
         addWorksheet(wb, "prediction")
         writeData(wb, "prediction", tables_list$prediction)
         # Save the workbook to the specified file

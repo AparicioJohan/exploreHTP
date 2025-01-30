@@ -9,6 +9,11 @@ utils::globalVariables(
     "Blue",
     "Green",
     "x",
-    "Plot"
+    "Plot",
+    "AIC",
+    "BIC", "n",
+    "nobs",
+    "sse",
+    "uid"
   )
 )

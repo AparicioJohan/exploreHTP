@@ -20,11 +20,11 @@
 #' @import openxlsx
 #' @import flexFitR
 #' @importFrom plotly plot_ly plotlyOutput renderPlotly
-#' @importFrom dplyr mutate select mutate_all rename filter all_of across
+#' @importFrom dplyr mutate select mutate_all rename filter all_of across full_join
 #' @importFrom shinyalert shinyalert
 #' @importFrom utils write.csv read.csv install.packages menu
 #' @importFrom grDevices rgb
-#' @importFrom stats coef
+#' @importFrom stats coef AIC BIC
 #' @importFrom DT renderDT datatable DTOutput
 run_app <- function(
     onStart = NULL,
