@@ -353,13 +353,19 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
         ),
         textAreaInput(
           inputId = ns("initial_values"),
-          label = helpText("Starting Values:"),
+          label = tooltip(
+            trigger = list(helpText("Starting Values:"), icon("circle-question")),
+            "e.g. a = 2; b = max(y); c = min(x[y > 0])"
+          ),
           value = paste(args, "= 0.1", collapse = "; "),
           width = "100%"
         ),
         textAreaInput(
           inputId = ns("fixed_values"),
-          label = helpText("Fixed Parameters:"),
+          label = tooltip(
+            trigger = list(helpText("Fixed Parameters:"), icon("circle-question")),
+            "e.g. a = 2; b = max(y); c = min(x[y > 0])"
+          ),
           value = NULL,
           placeholder = "e.g. k = max(y); m = 2",
           width = "100%"

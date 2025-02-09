@@ -21,7 +21,7 @@ app_ui <- function(request) {
         "exploreHTP 1.0.0"
       ),
       theme = bs_theme(preset = "shiny", version = 5),
-      collapsible = TRUE,
+      navbar_options = navbar_options(collapsible = TRUE),
       id = "main_navbar",
       fillable = TRUE,
       nav_panel(
