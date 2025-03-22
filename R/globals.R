@@ -14,6 +14,8 @@ utils::globalVariables(
     "BIC", "n",
     "nobs",
     "sse",
-    "uid"
+    "uid",
+    "fn_name",
+    "Sigma"
   )
 )
