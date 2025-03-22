@@ -895,7 +895,8 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
     # Info Criteria Table
     output$criteria_table <- renderDT({
       req(output_model())
-      criteria <- info_criteria(output_model())
+      criteria <- performance(output_model()) |>
+        dplyr::select(fn_name:Sigma)
       tables_list$info_criteria <- criteria
       dt <- criteria |>
         dplyr::mutate_if(is.numeric, round, 3)
