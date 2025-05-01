@@ -23,7 +23,8 @@ devtools::install_github("AparicioJohan/exploreHTP")
 You can launch the application by running:
 
 ``` r
-exploreHTP::run_app()
+library(exploreHTP)
+run_app()
 ```
 
 <img src='man/figures/Lastversion1.png' align="center"/>
@@ -34,11 +35,11 @@ exploreHTP::run_app()
 
 ## About
 
-You are reading the doc about version : 0.0.1
+You are reading the doc about version : 1.0.0
 
 This README has been compiled on the
 
 ``` r
 Sys.time()
-#> [1] "2024-12-13 14:54:16 CST"
+#> [1] "2025-05-01 15:35:24 CDT"
 ```

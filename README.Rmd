@@ -33,7 +33,8 @@ devtools::install_github("AparicioJohan/exploreHTP")
 You can launch the application by running:
 
 ```{r, eval = FALSE}
-exploreHTP::run_app()
+library(exploreHTP)
+run_app()
 ```
 
 <img src='man/figures/Lastversion1.png' align="center"/>
