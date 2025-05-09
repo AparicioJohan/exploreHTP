@@ -30,16 +30,16 @@ app_ui <- function(request) {
         mod_00_home_ui("00_home_1")
       ),
       nav_panel(
-        title = "Modeling",
-        mod_04_flexfitr_ui("04_flexfitr_1")
-      ),
-      nav_panel(
         title = "Autoextract",
         mod_02_auto_extract_ui("02_auto_extract_1")
       ),
       nav_panel(
         title = "Visualizer",
         mod_03_plot_visual_ui("03_plot_visual_1")
+      ),
+      nav_panel(
+        title = "Modeling",
+        mod_04_flexfitr_ui("04_flexfitr_1")
       ),
       nav_panel(
         title = "Resizer",
