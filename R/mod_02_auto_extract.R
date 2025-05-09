@@ -94,6 +94,30 @@ mod_02_auto_extract_ui <- function(id) {
               icon = icon("magnifying-glass")
             ),
             shinyWidgets::dropdownButton(
+              tags$strong("Subset Images"),
+              circle = FALSE,
+              label = "Subset",
+              icon = icon("filter"),
+              width = "400px",
+              margin = "20px",
+              br(),
+              shinyWidgets::pickerInput(
+                inputId = ns("subset_img"),
+                label = NULL,
+                choices = NULL,
+                multiple = TRUE,
+                options = shinyWidgets::pickerOptions(
+                  container = "body",
+                  actionsBox = TRUE,
+                  size = 5
+                ),
+                width = "100%"
+              ),
+              tooltip = shinyWidgets::tooltipOptions(
+                title = "Click to see more options!"
+              )
+            ),
+            shinyWidgets::dropdownButton(
               tags$strong("Optional Inputs"),
               circle = FALSE,
               label = "More",
@@ -158,7 +182,8 @@ mod_02_auto_extract_ui <- function(id) {
           textInput(
             inputId = ns("days"),
             label = "Days (comma-separated):",
-            value = "28, 42, 50, 62, 77, 84, 96, 105",
+            value = "",
+            placeholder = "28, 42, 50, ...",
             width = "90%"
           )
         ),
@@ -252,6 +277,30 @@ mod_02_auto_extract_server <- function(id) {
         )
       )
     })
+    observeEvent(input$directory_rgb,
+      {
+        subset <- path_rgb()
+        subset <- list.files(subset, pattern = "\\.tif$", full.names = TRUE)
+        total_imgs <- length(subset)
+        shinyWidgets::updatePickerInput(
+          session = session,
+          inputId = "subset_img",
+          choices = 1:total_imgs,
+          selected = 1:total_imgs
+        )
+      },
+      ignoreInit = TRUE
+    )
+    observeEvent(input$subset_img,
+      {
+        updateTextInput(
+          session = session,
+          inputId = "days",
+          value = paste(1:length(input$subset_img), collapse = ", "),
+        )
+      },
+      ignoreInit = TRUE
+    )
 
     # Path DSM
     observeEvent(input$directory_dsm,
@@ -271,7 +320,7 @@ mod_02_auto_extract_server <- function(id) {
     output$dirPathOut <- renderUI({
       tagList(
         fluidRow(
-          helpText(paste0(path_out()))
+          helpText(paste0(path_out(), "/", input$trial_name))
         )
       )
     })
@@ -327,6 +376,7 @@ mod_02_auto_extract_server <- function(id) {
         save_shape <- TRUE
         time_serie <- input$time_serie
         trial_name <- input$trial_name
+        subset <- as.numeric(input$subset_img)
         shinyalert(
           title = "Are you sure?",
           text = "Do you want to proceed with this action?",
@@ -369,6 +419,7 @@ mod_02_auto_extract_server <- function(id) {
                       time_serie = time_serie,
                       trial_name = trial_name,
                       path_out = path_out,
+                      subset = subset,
                       update_progress = NULL
                     )
                   })
