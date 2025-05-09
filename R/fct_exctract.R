@@ -20,6 +20,7 @@
 #' @param time_serie Logical. If `TRUE`, generates time-series plots. Default is `FALSE`.
 #' @param trial_name Character. Name of the trial for naming output files. Default is `"HARS22_chips"`.
 #' @param path_out Character. Directory path where output files will be saved.
+#' @param subset Numeric. Index with positions to subset images in path_rgb and path_dsm.
 #' @param update_progress Function (optional). Callback function to track progress, receiving current and total image counts as arguments.
 #'
 #' @return A list containing:
@@ -67,17 +68,28 @@ auto_extract <- function(path_rgb = NULL,
                          time_serie = FALSE,
                          trial_name = "test",
                          path_out = NULL,
+                         subset = NULL,
                          update_progress = NULL) {
   if (is.null(path_rgb)) {
     stop("Missing argument 'path_rgb'")
   }
   path_rgb <- list.files(path_rgb, pattern = "\\.tif$", full.names = TRUE)
+  if (!is.null(subset)) {
+    path_rgb <- path_rgb[subset]
+  }
   total_imgs <- length(path_rgb)
   if (total_imgs != length(time)) {
     stop("Number of images should match length of time.")
   }
   if (!is.null(path_dsm)) {
     path_dsm <- list.files(path_dsm, pattern = "\\.tif$", full.names = TRUE)
+    if (!is.null(subset)) {
+      path_dsm <- path_dsm[subset]
+    }
+    total_dsm <- length(path_dsm)
+    if (total_dsm != total_imgs) {
+      stop("DSMs must match length images: ", total_imgs, "!=", total_dsm)
+    }
   }
   data_total <- tt <- list()
   msg <- sprintf(" [%d/%d]", 1, total_imgs)

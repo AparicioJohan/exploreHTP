@@ -23,6 +23,7 @@ auto_extract(
   time_serie = FALSE,
   trial_name = "test",
   path_out = NULL,
+  subset = NULL,
   update_progress = NULL
 )
 }
@@ -62,6 +63,8 @@ auto_extract(
 \item{trial_name}{Character. Name of the trial for naming output files. Default is `"HARS22_chips"`.}
 
 \item{path_out}{Character. Directory path where output files will be saved.}
+
+\item{subset}{Numeric. Index with positions to subset images in path_rgb and path_dsm.}
 
 \item{update_progress}{Function (optional). Callback function to track progress, receiving current and total image counts as arguments.}
 }
