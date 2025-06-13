@@ -8,7 +8,6 @@
 #' @param plot_shape `sf` or `Spatial` object. Shapefile defining the experimental plots.
 #' @param plot_shape_crop `sf` or `Spatial` object (optional). Cropped shapefile for experimental plots. Defaults to `plot_shape`.
 #' @param indices Character vector. Vegetation indices to calculate. Default is `c("NGRDI", "BGI", "GLI")`.
-#' @param bands Character vector. Color bands to use. Default is `c("Red", "Green", "Blue")`.
 #' @param index_mask Character. Index used for soil masking. Default is `"HUE"`.
 #' @param mask_above Logical. If `TRUE`, masks areas with values above the threshold; otherwise, masks below. Default is `TRUE`.
 #' @param threshold Numeric. Threshold value for soil masking. Must be provided.
@@ -16,12 +15,16 @@
 #' @param plot_id Character (optional). Column name in `plot_shape` representing unique plot identifiers.
 #' @param save_plots Logical. If `TRUE`, saves individual plot-level images for each date. Default is `FALSE`.
 #' @param save_masked_plots Logical. If `TRUE`, saves soil-masked plot-level images for each date. Default is `FALSE`.
-#' @param save_shape Logical. If `TRUE`, saves the extracted data as shapefiles. Default is `TRUE`.
 #' @param time_serie Logical. If `TRUE`, generates time-series plots. Default is `FALSE`.
 #' @param trial_name Character. Name of the trial for naming output files. Default is `"HARS22_chips"`.
 #' @param path_out Character. Directory path where output files will be saved.
 #' @param subset Numeric. Index with positions to subset images in path_rgb and path_dsm.
-#' @param update_progress Function (optional). Callback function to track progress, receiving current and total image counts as arguments.
+#' @param red Integer between 1 and number of layers. Layer to use as the Red channel.
+#' @param green Integer between 1 and number of layers. Layer to use as the Green channel.
+#' @param blue Integer between 1 and number of layers. Layer to use as the Blue channel.
+#' @param rededge Integer between 1 and number of layers. Layer to use as the RedEdge channel.
+#' @param nir Integer between 1 and number of layers. Layer to use as the NIR channel.
+#' @param index_no_mask Character. Calculates a vegetation index without masking. Default is `"GLI"`.
 #'
 #' @return A list containing:
 #'   \item{dt}{A data frame with extracted metrics for each plot across all dates.}
@@ -56,7 +59,6 @@ auto_extract <- function(path_rgb = NULL,
                          plot_shape,
                          plot_shape_crop,
                          indices = c("NGRDI", "BGI", "GLI"),
-                         bands = c("Red", "Green", "Blue"),
                          index_mask = "HUE",
                          mask_above = TRUE,
                          threshold = 0,
@@ -64,12 +66,16 @@ auto_extract <- function(path_rgb = NULL,
                          plot_id = NULL,
                          save_plots = FALSE,
                          save_masked_plots = FALSE,
-                         save_shape = TRUE,
                          time_serie = FALSE,
                          trial_name = "test",
                          path_out = NULL,
                          subset = NULL,
-                         update_progress = NULL) {
+                         red = 1,
+                         green = 2,
+                         blue = 3,
+                         rededge = NULL,
+                         nir = NULL,
+                         index_no_mask = "GLI") {
   if (is.null(path_rgb)) {
     stop("Missing argument 'path_rgb'")
   }
@@ -98,7 +104,6 @@ auto_extract <- function(path_rgb = NULL,
     cli_h1("Starting: Mosaic {i}")
     msg <- sprintf(" (%d/%d)", i, total_imgs)
     cli_progress_update()
-    if (!is.null(update_progress)) update_progress(i, length(path_rgb))
     # Reading raster
     t1 <- read_rast(path_rgb[i], area_of_interest)
     # Detecting soil
@@ -109,9 +114,14 @@ auto_extract <- function(path_rgb = NULL,
       threshold <- as.numeric(threshold)
       t1_ns <- calc_mask(
         mosaic = t1,
+        red = red,
+        green = green,
+        blue = blue,
+        rededge = rededge,
+        nir = nir,
         index = index_mask,
         value = threshold,
-        crop_above = mask_above
+        crop_above = mask_above,
       )
     }
     cli_alert_success("Soil removed with {index_mask}")
@@ -130,18 +140,36 @@ auto_extract <- function(path_rgb = NULL,
     }
     # Calculating Indices
     cli_alert_info("Calculating indices")
-    t1_indices <- calc_index(mosaic = t1_ns$new, index = indices)
+    t1_indices <- calc_index(
+      mosaic = t1_ns$new,
+      red = red,
+      green = green,
+      blue = blue,
+      rededge = rededge,
+      nir = nir,
+      index = indices
+    )
     # Extracting Information
     cli_alert_info("Extracting information")
-    t1_info <- extract_shp(
-      mosaic = t1_indices[[c(bands, indices)]],
-      shp = plot_shape
-    )
-    # Calculating GLI without mask
-    cli_alert_info("Calculating indice without mask")
-    t1_gli <- calc_index(t1, index = "GLI")
-    # Extracting GLI Information
-    t1_info_gli <- extract_shp(t1_gli[["GLI"]], shp = plot_shape)
+    t1_info <- extract_shp(mosaic = t1_indices, shp = plot_shape)
+    # Calculating Index without mask
+    if (!is.null(index_no_mask)) {
+      cli_alert_info("Calculating indice without mask")
+      t1_no_mask <- calc_index(
+        mosaic = t1,
+        red = red,
+        green = green,
+        blue = blue,
+        rededge = rededge,
+        nir = nir,
+        index = index_no_mask
+      )
+      # Extracting Index Information without mask
+      t1_info_no_mask <- extract_shp(
+        mosaic = t1_no_mask[[index_no_mask]],
+        shp = plot_shape
+      )
+    }
     # Image Metadata
     tt[[i]] <- t1 |>
       mosaic_info(name = paste0("rgb_", time[i])) |>
@@ -160,11 +188,9 @@ auto_extract <- function(path_rgb = NULL,
     # Data
     dt_tmp <- t1_info |>
       mutate(Time = time[i], .before = all_of(plot_id)) |>
-      mutate(canopy = coverage[["area_percentage"]]) |>
-      mutate(total_pixels = coverage[["pixel_count"]]) |>
+      merge(y = st_drop_geometry(coverage), by = plot_id, sort = FALSE) |>
       mutate(plot_area = plot_area) |>
-      mutate(area_pixel = area_pixel[["area_mean"]]) |>
-      mutate(GLI_2 = t1_info_gli[["GLI_mean"]], .after = GLI_mean)
+      mutate(area_pixel = area_pixel[["area_mean"]])
     # Digital Surface Model (DSM)
     if (!is.null(path_dsm)) {
       cli_alert_info("Digital surface model")
@@ -196,25 +222,26 @@ auto_extract <- function(path_rgb = NULL,
       # Data
       dt_tmp <- ph_vol |>
         mutate(Time = time[i], .before = all_of(plot_id)) |>
-        mutate(canopy = coverage[["area_percentage"]]) |>
-        mutate(total_pixel = coverage[["pixel_count"]]) |>
+        merge(y = st_drop_geometry(coverage), by = plot_id, sort = FALSE) |>
         mutate(plot_area = plot_area) |>
         mutate(area_pixel = area_pixel[["area_mean"]]) |>
-        mutate(volume = total_pixel * area_pixel * ph) |>
-        mutate(GLI_2 = t1_info_gli[["GLI_mean"]], .after = GLI_mean)
+        mutate(volume = total_pixel * area_pixel * ph)
     }
     # Saving Data Frame
+    if (!is.null(index_no_mask)) {
+      dt_tmp <- dt_tmp |>
+        mutate(vi_nm = t1_info_no_mask[[paste0(index_no_mask, "_mean")]])
+      names(dt_tmp)[names(dt_tmp) == "vi_nm"] <- paste0(index_no_mask, "_no_mask")
+    }
     data_total[[i]] <- data.frame(dt_tmp)
     # Saving shape file
-    if (save_shape) {
-      path <- paste0(path_out, "/", trial_name, "/shape_files/")
-      create_folder_if_not_exists(path)
-      dt_tmp <- mutate(dt_tmp, Trial = trial_name, .before = Time)
-      names(dt_tmp) <- gsub("_mean", "", names(dt_tmp))
-      w_save <- paste0(path, "shape_", trial_name, ".gpkg")
-      st_write(dt_tmp, w_save, layer = time[i], append = FALSE, quiet = TRUE)
-      cli_alert_info(".gpkg file exported: {.path {w_save}}.")
-    }
+    path <- paste0(path_out, "/", trial_name, "/shape_files/")
+    create_folder_if_not_exists(path)
+    dt_tmp <- mutate(dt_tmp, Trial = trial_name, .before = Time)
+    names(dt_tmp) <- gsub("_mean", "", names(dt_tmp))
+    w_save <- paste0(path, "shape_", trial_name, ".gpkg")
+    st_write(dt_tmp, w_save, layer = time[i], append = FALSE, quiet = TRUE)
+    cli_alert_info(".gpkg file exported: {.path {w_save}}.")
     cli_alert_success("Extraction succeded")
   }
   cli_h1("")
@@ -539,7 +566,7 @@ calc_area <- function(mosaic, shp, field = NULL) {
     force_df = TRUE,
     progress = FALSE
   )
-  area_pixel <- exactextractr::exact_extract(
+  total_pixel <- exactextractr::exact_extract(
     x = mosaic[[1]],
     y = polygons_sf,
     fun = "count",
@@ -547,11 +574,12 @@ calc_area <- function(mosaic, shp, field = NULL) {
     progress = FALSE
   )
   # Calculate area percentage
-  area_percentage <- round(area_pixel / total_pixel_count * 100, 3)
-  colnames(area_percentage) <- "area_percentage"
-  colnames(area_pixel) <- "pixel_count"
+  canopy <- round(total_pixel / total_pixel_count * 100, 3)
+  colnames(canopy) <- "canopy"
+  colnames(total_pixel) <- "total_pixel"
   # Combine results with geometry
-  result <- cbind(polygons_sf, area_pixel, area_percentage)
+  result <- cbind(polygons_sf, canopy, total_pixel)
+  result <- result[match(shp[[plot_id]], result[[plot_id]]), ]
   return(result)
 }
 
@@ -702,4 +730,31 @@ read_rast <- function(path, area_of_interest = NULL) {
     img <- rast(path)
   }
   return(img)
+}
+
+list_bands <- function(bands) {
+  all_bands <- as.numeric(unlist(strsplit(bands, ",\\s*")))
+  total <- length(all_bands)
+  stopifnot(total >= 3 & total <= 5)
+  if (total >= 3) {
+    red <- all_bands[1]
+    green <- all_bands[2]
+    blue <- all_bands[3]
+  }
+  if (total == 5) {
+    rededge <- all_bands[4]
+    nir <- all_bands[5]
+  } else {
+    rededge <- NULL
+    nir <- NULL
+  }
+  return(
+    list(
+      red = red,
+      green = green,
+      blue = blue,
+      rededge = rededge,
+      nir = nir
+    )
+  )
 }

@@ -11,7 +11,6 @@ auto_extract(
   plot_shape,
   plot_shape_crop,
   indices = c("NGRDI", "BGI", "GLI"),
-  bands = c("Red", "Green", "Blue"),
   index_mask = "HUE",
   mask_above = TRUE,
   threshold = 0,
@@ -19,12 +18,16 @@ auto_extract(
   plot_id = NULL,
   save_plots = FALSE,
   save_masked_plots = FALSE,
-  save_shape = TRUE,
   time_serie = FALSE,
   trial_name = "test",
   path_out = NULL,
   subset = NULL,
-  update_progress = NULL
+  red = 1,
+  green = 2,
+  blue = 3,
+  rededge = NULL,
+  nir = NULL,
+  index_no_mask = "GLI"
 )
 }
 \arguments{
@@ -40,8 +43,6 @@ auto_extract(
 
 \item{indices}{Character vector. Vegetation indices to calculate. Default is `c("NGRDI", "BGI", "GLI")`.}
 
-\item{bands}{Character vector. Color bands to use. Default is `c("Red", "Green", "Blue")`.}
-
 \item{index_mask}{Character. Index used for soil masking. Default is `"HUE"`.}
 
 \item{mask_above}{Logical. If `TRUE`, masks areas with values above the threshold; otherwise, masks below. Default is `TRUE`.}
@@ -56,8 +57,6 @@ auto_extract(
 
 \item{save_masked_plots}{Logical. If `TRUE`, saves soil-masked plot-level images for each date. Default is `FALSE`.}
 
-\item{save_shape}{Logical. If `TRUE`, saves the extracted data as shapefiles. Default is `TRUE`.}
-
 \item{time_serie}{Logical. If `TRUE`, generates time-series plots. Default is `FALSE`.}
 
 \item{trial_name}{Character. Name of the trial for naming output files. Default is `"HARS22_chips"`.}
@@ -66,7 +65,17 @@ auto_extract(
 
 \item{subset}{Numeric. Index with positions to subset images in path_rgb and path_dsm.}
 
-\item{update_progress}{Function (optional). Callback function to track progress, receiving current and total image counts as arguments.}
+\item{red}{Integer between 1 and number of layers. Layer to use as the Red channel.}
+
+\item{green}{Integer between 1 and number of layers. Layer to use as the Green channel.}
+
+\item{blue}{Integer between 1 and number of layers. Layer to use as the Blue channel.}
+
+\item{rededge}{Integer between 1 and number of layers. Layer to use as the RedEdge channel.}
+
+\item{nir}{Integer between 1 and number of layers. Layer to use as the NIR channel.}
+
+\item{index_no_mask}{Character. Calculates a vegetation index without masking. Default is `"GLI"`.}
 }
 \value{
 A list containing:

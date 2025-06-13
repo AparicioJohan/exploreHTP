@@ -9,6 +9,8 @@
 #' @importFrom shiny NS tagList
 mod_02_auto_extract_ui <- function(id) {
   ns <- NS(id)
+  rgb_list <- exploreHTP::indices[exploreHTP::indices$band %in% "C", ]$index
+  mts_list <- exploreHTP::indices[!exploreHTP::indices$band %in% "C", ]$index
   tagList(
     layout_sidebar(
       fillable = TRUE,
@@ -18,7 +20,7 @@ mod_02_auto_extract_ui <- function(id) {
         shinyWidgets::materialSwitch(
           inputId = ns("save_plots"),
           label = "Save Plots",
-          value = TRUE,
+          value = FALSE,
           status = "primary",
           right = TRUE
         ),
@@ -37,25 +39,21 @@ mod_02_auto_extract_ui <- function(id) {
           right = TRUE
         ),
         accordion(
-          open = FALSE,
+          open = TRUE,
           accordion_panel(
             "Settings",
             icon = icon("cog"),
             selectInput(
               inputId = ns("seg_index"),
               label = "Segmentation Index:",
-              choices = c(
-                "BI", "BIM", "SCI", "GLI",
-                "HI", "NGRDI", "SI", "VARI",
-                "HUE", "BGI"
-              ),
+              choices = list("RGB" = rgb_list, "Multispectral" = mts_list),
               selected = c("HUE"),
               multiple = FALSE,
               width = "90%"
             ),
             checkboxInput(
               inputId = ns("mask_above"),
-              label = "Mask above?",
+              label = "Remove above?",
               value = TRUE,
               width = "100%"
             ),
@@ -63,6 +61,14 @@ mod_02_auto_extract_ui <- function(id) {
               inputId = ns("thrsh"),
               label = "Threshold:",
               value = 0,
+              width = "90%"
+            ),
+            selectInput(
+              inputId = ns("no_mask_index"),
+              label = "VI without mask:",
+              choices = list("None", "RGB" = rgb_list, "Multispectral" = mts_list),
+              selected = c("None"),
+              multiple = FALSE,
               width = "90%"
             )
           )
@@ -164,8 +170,15 @@ mod_02_auto_extract_ui <- function(id) {
           ),
           selectInput(
             inputId = ns("indices"),
-            label = "Select Indices:",
-            choices = exploreHTP::indices$index,
+            label = tagList(
+              "Select Indices:",
+              actionLink(
+                inputId = ns("view_indices"),
+                icon = icon("eye"),
+                label = "View"
+              )
+            ),
+            choices = list("RGB" = rgb_list, "Multispectral" = mts_list),
             selected = c("GLI", "NGRDI", "BGI"),
             multiple = TRUE,
             width = "90%"
@@ -224,6 +237,27 @@ mod_02_auto_extract_server <- function(id) {
     path_dsm <- reactiveVal()
     path_out <- reactiveVal()
     results <- reactiveVal()
+
+    # Table of indices
+    output$table_indices <- renderDT({
+      dt <- exploreHTP::indices |>
+        dplyr::rename(Index = index, Equation = eq, Band = band)
+      datatable(
+        data = dt,
+        options = list(pageLength = 5, autoWidth = FALSE),
+        filter = "top"
+      )
+    })
+
+    observeEvent(input$view_indices, {
+      showModal(modalDialog(
+        title = tagList(icon = icon("table-cells"), "View Indices"),
+        size = "l",
+        easyClose = TRUE,
+        footer = NULL,
+        DTOutput(ns("table_indices"))
+      ))
+    })
 
     # Area of Interest
     area_of_interest <- reactive({
@@ -361,19 +395,24 @@ mod_02_auto_extract_server <- function(id) {
     # Run Extraction
     observeEvent(input$submit,
       {
-        path_rgb <- path_rgb()
-        path_dsm <- path_dsm()
+        path_rgb <- if (length(path_rgb()) == 0) NULL else path_rgb()
+        path_dsm <- if (length(path_dsm()) == 0) NULL else path_dsm()
         path_out <- path_out()
         indices <- input$indices
-        bands <- c("Red", "Green", "Blue")
         index_mask <- if (input$seg_index == "") NULL else input$seg_index
         mask_above <- input$mask_above
         threshold <- input$thrsh
         time <- as.numeric(unlist(strsplit(input$days, ",\\s*")))
+        bands <- list_bands(input$rgb_bands)
+        red <- bands$red
+        green <- bands$green
+        blue <- bands$blue
+        rededge <- bands$rededge
+        nir <- bands$nir
+        index_no_mask <- if (input$no_mask_index == "None") NULL else input$no_mask_index
         plot_id <- input$plot_id
         save_plots <- input$save_plots
         save_masked_plots <- input$save_masked_plots
-        save_shape <- TRUE
         time_serie <- input$time_serie
         trial_name <- input$trial_name
         subset <- as.numeric(input$subset_img)
@@ -407,7 +446,6 @@ mod_02_auto_extract_server <- function(id) {
                       plot_shape = plot_shape(),
                       plot_shape_crop = plot_shape_crop(),
                       indices = indices,
-                      bands = bands,
                       index_mask = index_mask,
                       mask_above = mask_above,
                       threshold = threshold,
@@ -415,12 +453,16 @@ mod_02_auto_extract_server <- function(id) {
                       plot_id = plot_id,
                       save_plots = save_plots,
                       save_masked_plots = save_masked_plots,
-                      save_shape = save_shape,
                       time_serie = time_serie,
                       trial_name = trial_name,
                       path_out = path_out,
                       subset = subset,
-                      update_progress = NULL
+                      red = red,
+                      green = green,
+                      blue = blue,
+                      rededge = rededge,
+                      nir = nir,
+                      index_no_mask = index_no_mask
                     )
                   })
                 },
