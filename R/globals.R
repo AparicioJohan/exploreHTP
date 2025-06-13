@@ -16,6 +16,10 @@ utils::globalVariables(
     "sse",
     "uid",
     "fn_name",
-    "Sigma"
+    "Sigma",
+    "index",
+    "plot_id",
+    "eq",
+    "band"
   )
 )
