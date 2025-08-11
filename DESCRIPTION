@@ -1,9 +1,9 @@
 Package: exploreHTP
-Title: Explore High Throughtput Phenotypic Data
+Title: Explore High Throughput Phenotypic Data
 Version: 1.0.0
 Authors@R: 
     person("Johan", "Aparicio", , "johanstevenapa@gmail.com", role = c("aut", "cre"))
-Description: Web application for high throughtput phenotyping exploration.
+Description: Web application for high throughput phenotyping exploration.
 License: MIT + file LICENSE
 URL: https://github.com/AparicioJohan/exploreHTP
 BugReports: https://github.com/AparicioJohan/exploreHTP/issues
