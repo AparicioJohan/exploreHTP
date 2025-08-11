@@ -423,13 +423,85 @@ plot_organizer <- function(id,
   return(out)
 }
 
+#' Save per-plot time-series figures (masked and/or unmasked)
+#'
+#' @description
+#' Iterates over all unique plot IDs in an `sf` polygon layer and saves
+#' time-series figures for each plot. You can save the standard plots
+#' (from `plot/`) and/or the masked plots (from `plot_mask/`). Files are
+#' written to `<path_out>/<trial_name>/plots_time/` as PNGs.
+#'
+#' @param plot_shape An `sf` object (polygons) containing at least the column
+#'   named in `plot_id`. Typically the trial grid or per-plot shapefile.
+#' @param plot_id Character scalar. Name of the column in `plot_shape` that
+#'   identifies unique plots (e.g., `"plot"`).
+#' @param path_out Character scalar. Root output directory (created if needed).
+#' @param trial_name Character scalar. Trial identifier used to build paths.
+#'   The function expects to find input images under
+#'   `<path_out>/<trial_name>/plot/` and `<path_out>/<trial_name>/plot_mask/`,
+#'   and a geopackage at
+#'   `<path_out>/<trial_name>/shape_files/shape_<trial_name>.gpkg`.
+#' @param angle Numeric or `NULL`. Rotation/angle feature.
+#' @param base_size Numeric. Base text size passed into the internal
+#'   `plot_organizer()` call for ggplot theming. Default `14`.
+#' @param save_plots Logical. If `TRUE`, save unmasked time-series figures
+#'   (from the `plot/` directory). Default `TRUE`.
+#' @param save_masked_plots Logical. If `TRUE`, save masked time-series figures
+#'   (from the `plot_mask/` directory). Default `TRUE`.
+#' @param img_width,img_height Numerics giving the intended figure width/height
+#'   in inches. Default `width = 8`, `height = 6`.
+#'
+#' @details
+#' For each unique value of `plot_id` in `plot_shape`, the function:
+#' 1) calls `plot_organizer()` to construct the per-plot figure (using either
+#'    `plot/` or `plot_mask/`),
+#' 2) creates `<path_out>/<trial_name>/plots_time/` if it does not exist,
+#' 3) saves a PNG named `ID_<plot>.png` (unmasked) and/or `ID_<plot>_mask.png`
+#'    (masked).
+#'
+#' A progress spinner is shown via **cli**.
+#'
+#' @return
+#' Invisibly returns `NULL`. The primary side-effect is writing PNG files
+#' to disk. If both `save_plots` and `save_masked_plots` are `FALSE`, the
+#' function returns immediately without doing any work.
+#'
+#' @section Output files:
+#' Files are written to:
+#' - `<path_out>/<trial_name>/plots_time/ID_<plot>.png`
+#' - `<path_out>/<trial_name>/plots_time/ID_<plot>_mask.png`
+#'
+#' @examples
+#' \dontrun{
+#' library(sf)
+#'
+#' grid <- st_read("grid_shape_cut.gpkg")
+#'
+#' plot_time_series(
+#'   plot_shape = grid,
+#'   plot_id = "plot",
+#'   path_out = "extraction",
+#'   trial_name = "HARS25_chips",
+#'   angle = NULL,
+#'   base_size = 14,
+#'   save_plots = TRUE,
+#'   save_masked_plots = TRUE,
+#'   img_width = 8,         # currently ignored by the function
+#'   img_height = 6         # currently ignored by the function
+#' )
+#' }
+#'
+#' @export
 plot_time_series <- function(plot_shape,
                              plot_id,
                              path_out,
                              trial_name,
+                             angle = NULL,
                              base_size = 14,
                              save_plots = TRUE,
-                             save_masked_plots = TRUE) {
+                             save_masked_plots = TRUE,
+                             img_width = 8,
+                             img_height = 6) {
   if (!save_plots && !save_masked_plots) {
     return()
   }
@@ -450,7 +522,8 @@ plot_time_series <- function(plot_shape,
         plot_id = plot_id,
         path = paste0(path_out, "/", trial_name, "/plot/"),
         path_shape = path_shape,
-        base_size = 14
+        angle = angle,
+        base_size = base_size
       )
       create_folder_if_not_exists(
         path = paste0(path_out, "/", trial_name, "/plots_time/")
@@ -462,8 +535,8 @@ plot_time_series <- function(plot_shape,
         plot = p0$figure,
         units = "in",
         dpi = 300,
-        width = 8,
-        height = 6
+        width = img_width,
+        height = img_height
       ) |> suppressWarnings()
     }
     if (save_masked_plots) {
@@ -472,7 +545,8 @@ plot_time_series <- function(plot_shape,
         plot_id = plot_id,
         path = paste0(path_out, "/", trial_name, "/plot_mask/"),
         path_shape = path_shape,
-        base_size = 14
+        angle = angle,
+        base_size = base_size
       )
       ggsave(
         filename = paste0(
@@ -481,8 +555,8 @@ plot_time_series <- function(plot_shape,
         plot = p1$figure,
         units = "in",
         dpi = 300,
-        width = 8,
-        height = 6
+        width = img_width,
+        height = img_height
       ) |> suppressWarnings()
     }
     k <- k + 1
