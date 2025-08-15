@@ -450,6 +450,7 @@ plot_organizer <- function(id,
 #'   (from the `plot_mask/` directory). Default `TRUE`.
 #' @param img_width,img_height Numerics giving the intended figure width/height
 #'   in inches. Default `width = 8`, `height = 6`.
+#' @param type Character scalar. Can be "png", "jpg", or "svg". Default "png".
 #'
 #' @details
 #' For each unique value of `plot_id` in `plot_shape`, the function:
@@ -501,10 +502,12 @@ plot_time_series <- function(plot_shape,
                              save_plots = TRUE,
                              save_masked_plots = TRUE,
                              img_width = 8,
-                             img_height = 6) {
+                             img_height = 6,
+                             type = c("png", "jpg", "svg")) {
   if (!save_plots && !save_masked_plots) {
     return()
   }
+  type <- match.arg(type)
   unique_ids <- sort(unique(plot_shape[[plot_id]]))
   msgs <- "..."
   k <- 1
@@ -530,7 +533,7 @@ plot_time_series <- function(plot_shape,
       )
       ggsave(
         filename = paste0(
-          path_out, "/", trial_name, "/plots_time/ID_", w, ".png"
+          path_out, "/", trial_name, "/plots_time/ID_", w, ".", type
         ),
         plot = p0$figure,
         units = "in",
@@ -550,7 +553,7 @@ plot_time_series <- function(plot_shape,
       )
       ggsave(
         filename = paste0(
-          path_out, "/", trial_name, "/plots_time/ID_", w, "_mask.png"
+          path_out, "/", trial_name, "/plots_time/ID_", w, "_mask.", type
         ),
         plot = p1$figure,
         units = "in",

@@ -14,7 +14,8 @@ plot_time_series(
   save_plots = TRUE,
   save_masked_plots = TRUE,
   img_width = 8,
-  img_height = 6
+  img_height = 6,
+  type = c("png", "jpg", "svg")
 )
 }
 \arguments{
@@ -45,6 +46,8 @@ and a geopackage at
 
 \item{img_width, img_height}{Numerics giving the intended figure width/height
 in inches. Default `width = 8`, `height = 6`.}
+
+\item{type}{Character scalar. Can be "png", "jpg", or "svg". Default "png".}
 }
 \value{
 Invisibly returns `NULL`. The primary side-effect is writing PNG files
