@@ -24,7 +24,7 @@
 #' @importFrom shinyalert shinyalert
 #' @importFrom utils write.csv read.csv install.packages menu
 #' @importFrom grDevices rgb
-#' @importFrom stats coef AIC BIC
+#' @importFrom stats coef AIC BIC setNames
 #' @importFrom DT renderDT datatable DTOutput
 run_app <- function(
     onStart = NULL,

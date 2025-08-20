@@ -20,6 +20,11 @@ utils::globalVariables(
     "index",
     "plot_id",
     "eq",
-    "band"
+    "band",
+    "ID",
+    "dsm",
+    "DSM_baseline",
+    "offset",
+    "DSM_adj"
   )
 )
