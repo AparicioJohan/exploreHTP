@@ -106,6 +106,7 @@ align_write_dsms <- function(path_in,
   rs <- lapply(files, \(x) {
     new_x <- rast(x)
     names(new_x) <- "dsm"
+    new_x
   })
   names(rs) <- times
   gc <- sf::read_sf(gc_points) # sf points
@@ -113,7 +114,7 @@ align_write_dsms <- function(path_in,
     rbind,
     lapply(seq_along(rs), function(i) {
       df <- terra::extract(rs[[i]], gc)
-      df$Time <- i
+      df$Time <- times[i]
       df
     })
   )
@@ -126,7 +127,7 @@ align_write_dsms <- function(path_in,
     dplyr::group_by(Time) |>
     dplyr::summarise(offset = mean(DSM_baseline - dsm), .groups = "drop")
   offsets <- dplyr::bind_rows(
-    data.frame(Time = as.character(baseline_time), offset = 0),
+    data.frame(Time = baseline_time, offset = 0),
     offsets
   )
   off_map <- setNames(offsets$offset, offsets$Time)
