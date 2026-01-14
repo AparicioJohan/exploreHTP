@@ -8,7 +8,7 @@ License: MIT + file LICENSE
 URL: https://github.com/AparicioJohan/exploreHTP
 BugReports: https://github.com/AparicioJohan/exploreHTP/issues
 Depends: 
-    R (>= 2.10)
+    R (>= 4.1.0)
 Imports: 
     bslib,
     cli,

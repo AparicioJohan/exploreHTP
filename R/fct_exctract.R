@@ -246,7 +246,7 @@ auto_extract <- function(path_rgb = NULL,
   }
   cli_h1("")
   # Data with all indices across dates
-  dt <- do.call(what = rbind, args = data_total) |>
+  dt <- dplyr::bind_rows(data_total) |>
     as.data.frame() |>
     dplyr::select(-geom) |>
     mutate_all(~ ifelse(is.nan(.), NA, .)) |>
