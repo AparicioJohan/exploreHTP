@@ -210,7 +210,7 @@ auto_extract <- function(path_rgb = NULL,
       # Canopy Height Model (CHM) and Canopy Volume Model (CVM)
       cli_alert_info("Canopy height model")
       chm <- calc_height(dsm_base, dsm_k)
-      chm_rem_soil <- calc_mask(chm, mask = t1_ns$mask)
+      chm_rem_soil <- calc_mask(chm, mask = t1_ns$mask, method = "bilinear")
       ph <- extract_shp(chm_rem_soil$new$height, shp = t1_info)
       names(ph)[names(ph) == "height_mean"] <- "ph"
       ph_vol <- extract_shp(
@@ -726,7 +726,8 @@ calc_mask <- function(mosaic,
                       index = "HUE",
                       value = 0,
                       crop_above = TRUE,
-                      mask = NULL) {
+                      mask = NULL,
+                      method = "near") {
   num_band <- nlyr(mosaic)
   cli_progress_message("Masking images ...")
   if (is.null(mask)) {
@@ -751,7 +752,7 @@ calc_mask <- function(mosaic,
     }
     mr <- mask
     mosaic <- terra::crop(x = mosaic, y = mr)
-    mosaic <- terra::project(mosaic, mask, method = "near")
+    mosaic <- terra::project(mosaic, mask, method = method)
     if (crop_above) {
       m <- mr > value
     } else {
