@@ -199,7 +199,7 @@ auto_extract <- function(path_rgb = NULL,
         # DSM base soil
         names(dsm_base)[1] <- "dsm"
         dsm_info <- extract_shp(mosaic = dsm_base, shp = plot_shape) |>
-          select(all_of(plot_id), dsm  = dsm_mean) |>
+          select(all_of(plot_id), dsm = dsm_mean, dsm_soil = dsm_mean) |>
           st_drop_geometry()
       } else {
         dsm_k <- read_rast(path_dsm[i], area_of_interest)
@@ -207,8 +207,20 @@ auto_extract <- function(path_rgb = NULL,
         dsm_ns <- calc_mask(dsm_k, mask = t1_ns$mask, method = "bilinear")
         names(dsm_ns$new)[1] <- "dsm"
         dsm_info <- extract_shp(mosaic = dsm_ns$new$dsm, shp = plot_shape) |>
-          select(all_of(plot_id), dsm  = dsm_mean) |>
+          select(all_of(plot_id), dsm = dsm_mean) |>
           st_drop_geometry()
+        # DSM Soil
+        inv_mask <- !t1_ns$mask[[1]]
+        dsm_soil <- calc_mask(dsm_k, mask = inv_mask, method = "bilinear")
+        names(dsm_soil$new)[1] <- "dsm_soil"
+        dsm_info <- dsm_info |>
+          full_join(
+            y = dsm_soil$new$dsm_soil |>
+              extract_shp(shp = plot_shape) |>
+              select(all_of(plot_id), dsm_soil = dsm_soil_mean) |>
+              st_drop_geometry(),
+            by = plot_id
+          )
       }
       # Check CRS
       if (crs(dsm_base) != crs(dsm_k)) crs(dsm_k) <- crs(dsm_base)
@@ -499,8 +511,8 @@ plot_organizer <- function(id,
 #'   base_size = 14,
 #'   save_plots = TRUE,
 #'   save_masked_plots = TRUE,
-#'   img_width = 8,         # currently ignored by the function
-#'   img_height = 6         # currently ignored by the function
+#'   img_width = 8, # currently ignored by the function
+#'   img_height = 6 # currently ignored by the function
 #' )
 #' }
 #'
