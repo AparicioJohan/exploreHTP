@@ -207,6 +207,12 @@ auto_extract <- function(path_rgb = NULL,
         mosaic_info(dsm_k, name = "dsm")
       ) |>
         mutate(Time = time[i], .before = image)
+      # DSM
+      dsm_ns <- calc_mask(dsm_k, mask = t1_ns$mask, method = "bilinear")
+      names(dsm_ns$new)[1] <- "dsm"
+      dsm_info <- extract_shp(mosaic = dsm_ns$new$dsm, shp = plot_shape) |>
+        select(all_of(plot_id), dsm  = dsm_mean) |>
+        st_drop_geometry()
       # Canopy Height Model (CHM) and Canopy Volume Model (CVM)
       cli_alert_info("Canopy height model")
       chm <- calc_height(dsm_base, dsm_k)
@@ -221,6 +227,7 @@ auto_extract <- function(path_rgb = NULL,
       names(ph_vol)[names(ph_vol) == "volume_sum"] <- "volume"
       # Data
       dt_tmp <- ph_vol |>
+        merge(y = dsm_info, by = plot_id, sort = FALSE) |>
         mutate(Time = time[i], .before = all_of(plot_id)) |>
         merge(y = st_drop_geometry(coverage), by = plot_id, sort = FALSE) |>
         mutate(plot_area = plot_area) |>
