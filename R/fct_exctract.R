@@ -196,8 +196,19 @@ auto_extract <- function(path_rgb = NULL,
       cli_alert_info("Digital surface model")
       if (i == 1) {
         dsm_base <- dsm_k <- read_rast(path_dsm[i], area_of_interest)
+        # DSM base soil
+        names(dsm_base)[1] <- "dsm"
+        dsm_info <- extract_shp(mosaic = dsm_base, shp = plot_shape) |>
+          select(all_of(plot_id), dsm  = dsm_mean) |>
+          st_drop_geometry()
       } else {
         dsm_k <- read_rast(path_dsm[i], area_of_interest)
+        # DSM segmented
+        dsm_ns <- calc_mask(dsm_k, mask = t1_ns$mask, method = "bilinear")
+        names(dsm_ns$new)[1] <- "dsm"
+        dsm_info <- extract_shp(mosaic = dsm_ns$new$dsm, shp = plot_shape) |>
+          select(all_of(plot_id), dsm  = dsm_mean) |>
+          st_drop_geometry()
       }
       # Check CRS
       if (crs(dsm_base) != crs(dsm_k)) crs(dsm_k) <- crs(dsm_base)
@@ -207,12 +218,6 @@ auto_extract <- function(path_rgb = NULL,
         mosaic_info(dsm_k, name = "dsm")
       ) |>
         mutate(Time = time[i], .before = image)
-      # DSM
-      dsm_ns <- calc_mask(dsm_k, mask = t1_ns$mask, method = "bilinear")
-      names(dsm_ns$new)[1] <- "dsm"
-      dsm_info <- extract_shp(mosaic = dsm_ns$new$dsm, shp = plot_shape) |>
-        select(all_of(plot_id), dsm  = dsm_mean) |>
-        st_drop_geometry()
       # Canopy Height Model (CHM) and Canopy Volume Model (CVM)
       cli_alert_info("Canopy height model")
       chm <- calc_height(dsm_base, dsm_k)
