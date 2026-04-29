@@ -269,15 +269,29 @@ mod_02_auto_extract_server <- function(id) {
       return(out)
     })
 
-    # Plot Shape
-    plot_shape <- reactive({
+    # Plot Shape: original uploaded file
+    plot_shape_raw <- reactive({
       req(input$plot_shape)
-      if (!is.null(input$plot_shape)) {
-        out <- st_read(dsn = input$plot_shape$datapath, quiet = TRUE)
-      } else {
-        out <- NULL
+      st_read(dsn = input$plot_shape$datapath, quiet = TRUE)
+    })
+
+    # Plot Shape: filtered version used downstream
+    plot_shape <- reactive({
+      req(plot_shape_raw())
+      shp <- plot_shape_raw()
+      selected_levels <- input$subset_shape_level
+      if (
+        !is.null(input$color_by) &&
+        !is.null(selected_levels) &&
+        !"All" %in% selected_levels &&
+        length(selected_levels) > 0
+      ) {
+        shp <- shp |>
+          dplyr::filter(
+            as.character(.data[[input$color_by]]) %in% selected_levels
+          )
       }
-      return(out)
+      shp
     })
 
     # Plot Shape Crop
@@ -360,11 +374,11 @@ mod_02_auto_extract_server <- function(id) {
     })
 
     # Update Select Plot
-    observeEvent(plot_shape(), {
+    observeEvent(plot_shape_raw(), {
       updateSelectInput(
         session = session,
         inputId = "plot_id",
-        choices = colnames(plot_shape()) # Update choices with column names
+        choices = colnames(plot_shape_raw())
       )
     })
 
@@ -515,14 +529,35 @@ mod_02_auto_extract_server <- function(id) {
     output$map <- renderLeaflet({
       req(input$plot_shape)
       req(plot_shape())
-      plot_shape <- plot_shape()
+      validate(
+        need(nrow(plot_shape()) > 0, "No plots match the selected level.")
+      )
       map <- mapview(
-        x = plot_shape,
+        x = plot_shape(),
         alpha.regions = 0.5,
         aplha = 1,
         zcol = input$color_by
       )
       map@map
+    })
+
+    # Update filter plot_shape
+    observeEvent(input$color_by, {
+      req(plot_shape_raw(), input$color_by)
+      vals <- plot_shape_raw() |>
+        sf::st_drop_geometry() |>
+        dplyr::pull(input$color_by)
+      vals <- vals |>
+        as.character() |>
+        unique() |>
+        na.omit() |>
+        sort()
+      shinyWidgets::updatePickerInput(
+        session = session,
+        inputId = "subset_shape_level",
+        choices = c("All", vals),
+        selected = "All"
+      )
     })
 
     # Modal
@@ -533,13 +568,33 @@ mod_02_auto_extract_server <- function(id) {
         size = "l",
         easyClose = TRUE,
         footer = NULL,
-        shinyWidgets::pickerInput(
-          inputId = ns("color_by"),
-          label = "Select Column:",
-          choices = colnames(plot_shape()),
-          options = shinyWidgets::pickerOptions(
-            container = "body",
-            style = "btn-outline-secondary"
+        fluidRow(
+          column(
+            width = 6,
+            shinyWidgets::pickerInput(
+              inputId = ns("color_by"),
+              label = "Select Column:",
+              choices = colnames(plot_shape()),
+              options = shinyWidgets::pickerOptions(
+                container = "body",
+                style = "btn-outline-secondary"
+              )
+            )
+          ),
+          column(
+            width = 6,
+            shinyWidgets::pickerInput(
+              inputId = ns("subset_shape_level"),
+              label = "Subset selected level:",
+              choices = "All",
+              selected = "All",
+              multiple = TRUE,
+              options = shinyWidgets::pickerOptions(
+                container = "body",
+                style = "btn-outline-secondary",
+                actionsBox = TRUE
+              )
+            )
           )
         ),
         leafletOutput(outputId = ns("map"))
