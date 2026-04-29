@@ -92,8 +92,8 @@ plot_time_series(
   base_size = 14,
   save_plots = TRUE,
   save_masked_plots = TRUE,
-  img_width = 8,         # currently ignored by the function
-  img_height = 6         # currently ignored by the function
+  img_width = 8, # currently ignored by the function
+  img_height = 6 # currently ignored by the function
 )
 }
 
