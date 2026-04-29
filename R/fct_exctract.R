@@ -646,18 +646,20 @@ calc_area <- function(mosaic, shp, field = NULL) {
   if (is.null(shp)) {
     stop("The input 'shp' (shapefile or spatial object) cannot be NULL.")
   }
+  if (is.null(field)) {
+    stop("field cannot be NULL")
+  }
   # Determine the rasterization field
-  raster_field <- if (is.null(field)) stop("field can not be NULL") else field
-  if (!(raster_field %in% names(shp))) {
+  if (!(field %in% names(shp))) {
     stop(paste(
-      "The field", raster_field, "is not found in the shapefile attributes."
+      "The field", field, "is not found in the shapefile attributes."
     ))
   }
   shp[[field]] <- as.character(shp[[field]])
   # Convert shp to terra vector
   terra_vect <- terra::vect(shp)
   # Rasterize using the specified field
-  terra_rast <- terra::rasterize(terra_vect, mosaic, field = raster_field)
+  terra_rast <- terra::rasterize(terra_vect, mosaic, field = field)
   polygons_sf <- sf::st_as_sf(terra::as.polygons(terra_rast))
   # Calculate total pixel count and area pixels
   total_pixel_count <- exactextractr::exact_extract(
@@ -680,7 +682,7 @@ calc_area <- function(mosaic, shp, field = NULL) {
   colnames(total_pixel) <- "total_pixel"
   # Combine results with geometry
   result <- cbind(polygons_sf, canopy, total_pixel)
-  result <- result[match(shp[[plot_id]], result[[plot_id]]), ]
+  result <- result[match(shp[[field]], result[[field]]), ]
   return(result)
 }
 
