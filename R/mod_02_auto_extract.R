@@ -17,6 +17,12 @@ mod_02_auto_extract_ui <- function(id) {
       sidebar = sidebar(
         open = "desktop",
         title = "Autoextract",
+        actionButton(
+          inputId = ns("open_autoextract_guide"),
+          label = "Open detailed guide",
+          icon = icon("book-open"),
+          class = "btn-outline-primary btn-sm"
+        ),
         shinyWidgets::materialSwitch(
           inputId = ns("save_plots"),
           label = "Save Plots",
@@ -231,6 +237,56 @@ mod_02_auto_extract_ui <- function(id) {
 mod_02_auto_extract_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    # Guide
+    observeEvent(input$open_autoextract_guide, {
+      showModal(modalDialog(
+        title = tagList(icon("book-open"), "Autoextract guide"),
+        size = "l",
+        easyClose = TRUE,
+        footer = modalButton("Close"),
+        tags$h4("What this module does"),
+        tags$p(
+          "This module extracts plot-level values from UAV mosaics using a plot grid shapefile. ",
+          "It can calculate vegetation indices, canopy cover, and optionally plant height if DSM images are provided."
+        ),
+        tags$hr(),
+        tags$h4("Required inputs"),
+        tags$ul(
+          tags$li(tags$strong("Grid Shapefile (.gpkg): "), "plot boundaries used for extraction."),
+          tags$li(tags$strong("Images Directory: "), "folder containing RGB or multispectral GeoTIFF images."),
+          tags$li(tags$strong("Plot ID: "), "column in the shapefile that uniquely identifies each plot."),
+          tags$li(tags$strong("Days: "), "time value associated with each selected image."),
+          tags$li(tags$strong("Output Directory: "), "folder where extracted data and optional plots will be saved.")
+        ),
+        tags$h4("Optional inputs"),
+        tags$ul(
+          tags$li(tags$strong("DSM Directory: "), "used to estimate plant height and volume."),
+          tags$li(tags$strong("Shapefile to Crop: "), "optional grid used when saving individual plot images."),
+          tags$li(tags$strong("Area of Interest: "), "optional boundary used to crop the mosaics before extraction.")
+        ),
+        tags$h4("Shapefile preview and subsetting"),
+        tags$p(
+          "Click the eye button next to the shapefile input to preview the grid. ",
+          "You can color the map by any shapefile column and subset the plots by one or more levels before running the extraction."
+        ),
+        tags$h4("Important checks before submitting"),
+        tags$ul(
+          tags$li("Make sure the number of selected images matches the number of values in Days."),
+          tags$li("Make sure the selected Plot ID column has unique plot identifiers."),
+          tags$li("Make sure the segmentation index and threshold remove soil correctly."),
+          tags$li("If DSM images are used, the number of DSM files must match the number of RGB images.")
+        ),
+        tags$h4("Outputs"),
+        tags$ul(
+          tags$li("A CSV file with extracted plot-level data."),
+          tags$li("A geopackage with extracted values by image date."),
+          tags$li("Optional individual plot images."),
+          tags$li("Optional masked plot images."),
+          tags$li("Optional time-series figures.")
+        )
+      ))
+    })
 
     # Reactive Values
     path_rgb <- reactiveVal()
