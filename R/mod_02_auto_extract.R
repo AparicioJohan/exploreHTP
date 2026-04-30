@@ -12,70 +12,89 @@ mod_02_auto_extract_ui <- function(id) {
   rgb_list <- exploreHTP::indices[exploreHTP::indices$band %in% "C", ]$index
   mts_list <- exploreHTP::indices[!exploreHTP::indices$band %in% "C", ]$index
   tagList(
+    cicerone::use_cicerone(),
     layout_sidebar(
       fillable = TRUE,
       sidebar = sidebar(
         open = "desktop",
         title = "Autoextract",
         actionButton(
-          inputId = ns("open_autoextract_guide"),
-          label = "Open detailed guide",
-          icon = icon("book-open"),
-          class = "btn-outline-primary btn-sm"
+          inputId = ns("start_autoextract_tour"),
+          label = "Guide",
+          icon = icon("route"),
+          class = "btn-outline-primary"
         ),
-        shinyWidgets::materialSwitch(
-          inputId = ns("save_plots"),
-          label = "Save Plots",
-          value = FALSE,
-          status = "primary",
-          right = TRUE
-        ),
-        shinyWidgets::materialSwitch(
-          inputId = ns("save_masked_plots"),
-          label = "Save Masked Plots",
-          value = FALSE,
-          status = "primary",
-          right = TRUE
-        ),
-        shinyWidgets::materialSwitch(
-          inputId = ns("time_serie"),
-          label = "Save Time Series",
-          value = FALSE,
-          status = "primary",
-          right = TRUE
+        tags$div(
+          id = ns("guide_output_options"),
+          style = "margin-top: 4px; margin-bottom: 4px;",
+          shinyWidgets::materialSwitch(
+            inputId = ns("save_plots"),
+            label = "Save Plots",
+            value = FALSE,
+            status = "primary",
+            right = TRUE
+          ),
+          shinyWidgets::materialSwitch(
+            inputId = ns("save_masked_plots"),
+            label = "Save Masked Plots",
+            value = FALSE,
+            status = "primary",
+            right = TRUE
+          ),
+          shinyWidgets::materialSwitch(
+            inputId = ns("time_serie"),
+            label = "Save Time Series",
+            value = FALSE,
+            status = "primary",
+            right = TRUE
+          ),
+          conditionalPanel(
+            ns = ns,
+            condition = "input.time_serie == true",
+            textInput(
+              inputId = ns("angle"),
+              label = "Angle:",
+              value = "auto",
+              width = "90%",
+              placeholder = "auto"
+            ),
+          )
         ),
         accordion(
           open = TRUE,
           accordion_panel(
             "Settings",
             icon = icon("cog"),
-            selectInput(
-              inputId = ns("seg_index"),
-              label = "Segmentation Index:",
-              choices = list("RGB" = rgb_list, "Multispectral" = mts_list),
-              selected = c("HUE"),
-              multiple = FALSE,
-              width = "90%"
-            ),
-            checkboxInput(
-              inputId = ns("mask_above"),
-              label = "Remove above?",
-              value = TRUE,
-              width = "100%"
-            ),
-            textInput(
-              inputId = ns("thrsh"),
-              label = "Threshold:",
-              value = 0,
-              width = "90%"
-            ),
-            selectInput(
-              inputId = ns("no_mask_index"),
-              label = "VI without mask:",
-              choices = list("None", "RGB" = rgb_list, "Multispectral" = mts_list),
-              selected = c("None"),
-              multiple = FALSE,
-              width = "90%"
+            tags$div(
+              id = ns("guide_segmentation_settings"),
+              selectInput(
+                inputId = ns("seg_index"),
+                label = "Segmentation Index:",
+                choices = list("RGB" = rgb_list, "Multispectral" = mts_list),
+                selected = c("HUE"),
+                multiple = FALSE,
+                width = "90%"
+              ),
+              checkboxInput(
+                inputId = ns("mask_above"),
+                label = "Remove above?",
+                value = TRUE,
+                width = "100%"
+              ),
+              textInput(
+                inputId = ns("thrsh"),
+                label = "Threshold:",
+                value = 0,
+                width = "90%"
+              ),
+              selectInput(
+                inputId = ns("no_mask_index"),
+                label = "VI without mask:",
+                choices = list("None", "RGB" = rgb_list, "Multispectral" = mts_list),
+                selected = c("None"),
+                multiple = FALSE,
+                width = "90%"
+              )
             )
           )
         )
@@ -86,78 +105,87 @@ mod_02_auto_extract_ui <- function(id) {
           width = 12,
           tags$div(
             style = "display: flex; align-items: center; gap: 10px;",
-            fileInput(
-              inputId = ns("plot_shape"),
-              label = "Grid Shapefile (.gpkg)",
-              accept = c(".gpkg"),
-              width = "23%",
-              placeholder = "Grid Shapefile (.gpkg)"
-            ),
-            actionButton(
-              inputId = ns("view_shape"),
-              icon = icon("eye"),
-              label = NULL,
-              class = "btn-primary"
-            ),
-            shinyDirButton(
-              id = ns("directory_rgb"),
-              label = "Images Directory",
-              title = "Choose any folder",
-              icon = icon("magnifying-glass")
-            ),
-            shinyWidgets::dropdownButton(
-              tags$strong("Subset Images"),
-              circle = FALSE,
-              label = "Subset",
-              icon = icon("filter"),
-              width = "400px",
-              margin = "20px",
-              br(),
-              shinyWidgets::pickerInput(
-                inputId = ns("subset_img"),
-                label = NULL,
-                choices = NULL,
-                multiple = TRUE,
-                options = shinyWidgets::pickerOptions(
-                  container = "body",
-                  actionsBox = TRUE,
-                  size = 5
-                ),
-                width = "100%"
-              ),
-              tooltip = shinyWidgets::tooltipOptions(
-                title = "Click to see more options!"
+            tags$div(
+              id = ns("guide_plot_shape"),
+              fileInput(
+                inputId = ns("plot_shape"),
+                label = "Grid Shapefile (.gpkg)",
+                accept = c(".gpkg"),
+                width = "100%",
+                placeholder = "Grid Shapefile (.gpkg)"
               )
             ),
-            shinyWidgets::dropdownButton(
-              tags$strong("Optional Inputs"),
-              circle = FALSE,
-              label = "More",
-              icon = icon("plus"),
-              width = "400px",
-              margin = "20px",
-              br(),
+            tags$div(
+              id = ns("guide_view_shape"),
+              actionButton(
+                inputId = ns("view_shape"),
+                icon = icon("eye"),
+                label = NULL,
+                class = "btn-primary"
+              )
+            ),
+            tags$div(
+              id = ns("guide_directory_rgb"),
               shinyDirButton(
-                id = ns("directory_dsm"),
-                label = "DSM Directory",
+                id = ns("directory_rgb"),
+                label = "Images Directory",
                 title = "Choose any folder",
-                icon = icon("magnifying-glass"),
-                style = "margin-bottom: 25px;"
-              ),
-              fileInput(
-                inputId = ns("plot_shape_crop"),
-                label = helpText("Shapefile to Crop (Optional)"),
-                accept = c(".gpkg"),
-                width = "100%"
-              ),
-              fileInput(
-                inputId = ns("area"),
-                label = helpText("Area of Interest (Optional)"),
-                accept = c(".gpkg"),
-                width = "100%"
-              ),
-              tooltip = shinyWidgets::tooltipOptions(
-                title = "Click to see more options!"
+                icon = icon("magnifying-glass")
+              )
+            ),
+            tags$div(
+              id = ns("guide_subset_img"),
+              shinyWidgets::dropdownButton(
+                tags$strong("Subset Images"),
+                circle = FALSE,
+                label = "Subset",
+                icon = icon("filter"),
+                width = "400px",
+                margin = "20px",
+                br(),
+                shinyWidgets::pickerInput(
+                  inputId = ns("subset_img"),
+                  label = NULL,
+                  choices = NULL,
+                  multiple = TRUE,
+                  options = shinyWidgets::pickerOptions(
+                    container = "body",
+                    actionsBox = TRUE,
+                    size = 5
+                  ),
+                  width = "100%"
+                )
+              )
+            ),
+            tags$div(
+              id = ns("guide_optional_inputs"),
+              shinyWidgets::dropdownButton(
+                tags$strong("Optional Inputs"),
+                circle = FALSE,
+                label = "More",
+                icon = icon("plus"),
+                width = "400px",
+                margin = "20px",
+                br(),
+                shinyDirButton(
+                  id = ns("directory_dsm"),
+                  label = "DSM Directory",
+                  title = "Choose any folder",
+                  icon = icon("magnifying-glass"),
+                  style = "margin-bottom: 25px;"
+                ),
+                fileInput(
+                  inputId = ns("plot_shape_crop"),
+                  label = helpText("Shapefile to Crop (Optional)"),
+                  accept = c(".gpkg"),
+                  width = "100%"
+                ),
+                fileInput(
+                  inputId = ns("area"),
+                  label = helpText("Area of Interest (Optional)"),
+                  accept = c(".gpkg"),
+                  width = "100%"
+                )
               )
             )
           )
@@ -168,42 +196,54 @@ mod_02_auto_extract_ui <- function(id) {
         ),
         column(
           width = 4,
-          textInput(
-            inputId = ns("rgb_bands"),
-            label = "RGB/RedEdge/NIR:",
-            value = "1, 2, 3",
-            width = "90%"
+          tags$div(
+            id = ns("guide_rgb_bands"),
+            textInput(
+              inputId = ns("rgb_bands"),
+              label = "RGB/RedEdge/NIR:",
+              value = "1, 2, 3",
+              width = "90%"
+            )
           ),
-          selectInput(
-            inputId = ns("indices"),
-            label = tagList(
-              "Select Indices:",
-              actionLink(
-                inputId = ns("view_indices"),
-                icon = icon("eye"),
-                label = "View"
-              )
-            ),
-            choices = list("RGB" = rgb_list, "Multispectral" = mts_list),
-            selected = c("GLI", "NGRDI", "BGI"),
-            multiple = TRUE,
-            width = "90%"
+          tags$div(
+            id = ns("guide_indices"),
+            selectInput(
+              inputId = ns("indices"),
+              label = tagList(
+                "Select Indices:",
+                actionLink(
+                  inputId = ns("view_indices"),
+                  icon = icon("eye"),
+                  label = "View"
+                )
+              ),
+              choices = list("RGB" = rgb_list, "Multispectral" = mts_list),
+              selected = c("GLI", "NGRDI", "BGI"),
+              multiple = TRUE,
+              width = "90%"
+            )
           )
         ),
         column(
           width = 4,
-          selectInput(
-            inputId = ns("plot_id"),
-            label = "Select Plot ID:",
-            choices = NULL,
-            width = "90%"
+          tags$div(
+            id = ns("guide_plot_id"),
+            selectInput(
+              inputId = ns("plot_id"),
+              label = "Select Plot ID:",
+              choices = NULL,
+              width = "90%"
+            )
           ),
-          textInput(
-            inputId = ns("days"),
-            label = "Days (comma-separated):",
-            value = "",
-            placeholder = "28, 42, 50, ...",
-            width = "90%"
+          tags$div(
+            id = ns("guide_days"),
+            textInput(
+              inputId = ns("days"),
+              label = "Days (comma-separated):",
+              value = "",
+              placeholder = "28, 42, 50, ...",
+              width = "90%"
+            )
           )
         ),
         column(
@@ -215,14 +255,16 @@ mod_02_auto_extract_ui <- function(id) {
             value = "HARS22_chips",
             width = "90%"
           ),
-          shinyDirButton(
-            id = ns("directory_out"),
-            label = "Output Directory",
-            title = "Choose any folder",
-            icon = icon("magnifying-glass")
+          tags$div(
+            id = ns("guide_output"),
+            shinyDirButton(
+              id = ns("directory_out"),
+              label = "Output Directory",
+              title = "Choose any folder",
+              icon = icon("magnifying-glass")
+            ),
+            actionButton(ns("submit"), "Submit", icon = icon("thumbs-up"))
           ),
-          # Submit button
-          actionButton(ns("submit"), "Submit", icon = icon("thumbs-up")),
           uiOutput(ns("dirPathOut"))
         ),
         column(width = 12, br(), uiOutput(ns("ui_plot")))
@@ -238,54 +280,93 @@ mod_02_auto_extract_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # Guide
-    observeEvent(input$open_autoextract_guide, {
-      showModal(modalDialog(
-        title = tagList(icon("book-open"), "Autoextract guide"),
-        size = "l",
-        easyClose = TRUE,
-        footer = modalButton("Close"),
-        tags$h4("What this module does"),
-        tags$p(
-          "This module extracts plot-level values from UAV mosaics using a plot grid shapefile. ",
-          "It can calculate vegetation indices, canopy cover, and optionally plant height if DSM images are provided."
-        ),
-        tags$hr(),
-        tags$h4("Required inputs"),
-        tags$ul(
-          tags$li(tags$strong("Grid Shapefile (.gpkg): "), "plot boundaries used for extraction."),
-          tags$li(tags$strong("Images Directory: "), "folder containing RGB or multispectral GeoTIFF images."),
-          tags$li(tags$strong("Plot ID: "), "column in the shapefile that uniquely identifies each plot."),
-          tags$li(tags$strong("Days: "), "time value associated with each selected image."),
-          tags$li(tags$strong("Output Directory: "), "folder where extracted data and optional plots will be saved.")
-        ),
-        tags$h4("Optional inputs"),
-        tags$ul(
-          tags$li(tags$strong("DSM Directory: "), "used to estimate plant height and volume."),
-          tags$li(tags$strong("Shapefile to Crop: "), "optional grid used when saving individual plot images."),
-          tags$li(tags$strong("Area of Interest: "), "optional boundary used to crop the mosaics before extraction.")
-        ),
-        tags$h4("Shapefile preview and subsetting"),
-        tags$p(
-          "Click the eye button next to the shapefile input to preview the grid. ",
-          "You can color the map by any shapefile column and subset the plots by one or more levels before running the extraction."
-        ),
-        tags$h4("Important checks before submitting"),
-        tags$ul(
-          tags$li("Make sure the number of selected images matches the number of values in Days."),
-          tags$li("Make sure the selected Plot ID column has unique plot identifiers."),
-          tags$li("Make sure the segmentation index and threshold remove soil correctly."),
-          tags$li("If DSM images are used, the number of DSM files must match the number of RGB images.")
-        ),
-        tags$h4("Outputs"),
-        tags$ul(
-          tags$li("A CSV file with extracted plot-level data."),
-          tags$li("A geopackage with extracted values by image date."),
-          tags$li("Optional individual plot images."),
-          tags$li("Optional masked plot images."),
-          tags$li("Optional time-series figures.")
-        )
-      ))
+    guide <- cicerone::Cicerone$
+      new()$
+      step(
+      el = ns("guide_plot_shape"),
+      title = "1. Upload plot grid",
+      description = "Start by uploading the plot grid shapefile as a .gpkg file. This file defines the plot boundaries used for extraction."
+    )$
+      step(
+      el = ns("guide_view_shape"),
+      title = "2. Preview and subset grid",
+      description = "Use this button to preview the shapefile. You can color plots by a column and subset plots by one or more levels before extraction."
+    )$
+      step(
+      el = ns("guide_directory_rgb"),
+      title = "3. Select image folder",
+      description = "Choose the folder containing the RGB or multispectral GeoTIFF images."
+    )$
+      step(
+      el = ns("guide_subset_img"),
+      title = "4. Subset images",
+      description = "Use this option if you only want to process a subset of the images in the selected folder."
+    )$
+      step(
+      el = ns("guide_optional_inputs"),
+      title = "Optional inputs",
+      description = paste(
+        "Use this menu to provide optional files.",
+        "Add a DSM directory if you want to calculate plant height or volume.",
+        "You can also provide a shapefile for cropping saved plot images",
+        "or an area of interest to crop the mosaics before extraction."
+      )
+    )$
+      step(
+      el = ns("guide_rgb_bands"),
+      title = "5. Define image bands",
+      description = "Specify the band order. For RGB images, use red, green, and blue. For multispectral images, include red edge and NIR if needed."
+    )$
+      step(
+      el = ns("guide_indices"),
+      title = "6. Select vegetation indices",
+      description = "Choose the vegetation indices to calculate for each plot."
+    )$
+      step(
+      el = ns("guide_plot_id"),
+      title = "7. Select plot ID",
+      description = "Choose the shapefile column that uniquely identifies each plot."
+    )$
+      step(
+      el = ns("guide_days"),
+      title = "8. Check image times",
+      description = "These values should match the selected images. For example: 28, 42, 50."
+    )$
+      step(
+      el = ns("guide_output"),
+      title = "9. Select output folder",
+      description = "Choose where the extracted CSV, shapefiles, and optional plots will be saved. Then click Submit to start the extraction."
+    )$
+      step(
+      el = ns("guide_output_options"),
+      title = "Output options",
+      description = paste(
+        "Use these switches to control optional outputs.",
+        "Save Plots exports individual plot images.",
+        "Save Masked Plots exports soil-masked plot images.",
+        "Save Time Series creates per-plot time-series figures."
+      )
+    )$
+      step(
+      el = ns("guide_segmentation_settings"),
+      title = "Segmentation settings",
+      description = paste(
+        "Segmentation Index: selects the index used to separate vegetation from soil.",
+        "",
+        "Remove above?: controls whether values above the threshold are masked.",
+        "",
+        "Threshold: sets the cutoff value.",
+        "",
+        "VI without mask: calculates one index from the original image without masking.",
+        sep = "<br>"
+      )
+    )
+    # Tour
+    session$onFlushed(function() {
+      guide$init()
+    }, once = TRUE)
+    observeEvent(input$start_autoextract_tour, {
+      guide$start()
     })
 
     # Reactive Values
@@ -338,9 +419,9 @@ mod_02_auto_extract_server <- function(id) {
       selected_levels <- input$subset_shape_level
       if (
         !is.null(input$color_by) &&
-        !is.null(selected_levels) &&
-        !"All" %in% selected_levels &&
-        length(selected_levels) > 0
+          !is.null(selected_levels) &&
+          !"All" %in% selected_levels &&
+          length(selected_levels) > 0
       ) {
         shp <- shp |>
           dplyr::filter(
@@ -369,10 +450,14 @@ mod_02_auto_extract_server <- function(id) {
     # Path RGB
     observeEvent(input$directory_rgb,
       {
-        path_rgb(parseDirPath(roots, input$directory_rgb))
+        rgb_dir <- parseDirPath(roots, input$directory_rgb)
+        req(length(rgb_dir) == 1)
+        req(dir.exists(rgb_dir))
+        path_rgb(rgb_dir)
       },
       ignoreInit = TRUE
     )
+
     output$dirPathRGB <- renderUI({
       tagList(
         fluidRow(
@@ -381,20 +466,31 @@ mod_02_auto_extract_server <- function(id) {
         )
       )
     })
-    observeEvent(input$directory_rgb,
+
+    observeEvent(path_rgb(),
       {
-        subset <- path_rgb()
-        subset <- list.files(subset, pattern = "\\.tif$", full.names = TRUE)
-        total_imgs <- length(subset)
+        req(path_rgb())
+        rgb_dir <- path_rgb()
+        validate(
+          need(length(rgb_dir) == 1, "RGB directory was not selected correctly."),
+          need(dir.exists(rgb_dir), "Selected RGB directory does not exist.")
+        )
+        imgs <- list.files(path = rgb_dir, pattern = "\\.tif$", full.names = TRUE)
+        validate(
+          need(length(imgs) > 0, "No .tif files were found in the selected RGB directory.")
+        )
+        total_imgs <- length(imgs)
         shinyWidgets::updatePickerInput(
           session = session,
           inputId = "subset_img",
-          choices = 1:total_imgs,
-          selected = 1:total_imgs
+          choices = seq_len(total_imgs),
+          selected = seq_len(total_imgs)
         )
       },
       ignoreInit = TRUE
     )
+
+
     observeEvent(input$subset_img,
       {
         updateTextInput(
@@ -486,6 +582,12 @@ mod_02_auto_extract_server <- function(id) {
         time_serie <- input$time_serie
         trial_name <- input$trial_name
         subset <- as.numeric(input$subset_img)
+        if (input$angle == "auto" | is.null(input$angle)) {
+          angle <- get_plot_angle(plot_shape()[1, ])
+          angle <- angle - 90
+        } else {
+          angle <- as.numeric(input$angle)
+        }
         shinyalert(
           title = "Are you sure?",
           text = "Do you want to proceed with this action?",
@@ -532,7 +634,8 @@ mod_02_auto_extract_server <- function(id) {
                       blue = blue,
                       rededge = rededge,
                       nir = nir,
-                      index_no_mask = index_no_mask
+                      index_no_mask = index_no_mask,
+                      angle_grid = angle
                     )
                   })
                 },
