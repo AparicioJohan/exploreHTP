@@ -31,7 +31,7 @@ app_ui <- function(request) {
       ),
       nav_panel(
         title = "Autoextract",
-        mod_02_auto_extract_ui("02_auto_extract_1")
+        mod_02_auto_extract_ui("auto_extract_1")
       ),
       nav_panel(
         title = "Visualizer",
