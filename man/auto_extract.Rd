@@ -7,7 +7,7 @@
 auto_extract(
   path_rgb = NULL,
   path_dsm = NULL,
-  area_of_interest,
+  area_of_interest = NULL,
   plot_shape,
   plot_shape_crop,
   indices = c("NGRDI", "BGI", "GLI"),
@@ -27,7 +27,9 @@ auto_extract(
   blue = 3,
   rededge = NULL,
   nir = NULL,
-  index_no_mask = "GLI"
+  index_no_mask = "GLI",
+  buffer_aoi = 1,
+  angle_grid = NULL
 )
 }
 \arguments{
@@ -76,6 +78,10 @@ auto_extract(
 \item{nir}{Integer between 1 and number of layers. Layer to use as the NIR channel.}
 
 \item{index_no_mask}{Character. Calculates a vegetation index without masking. Default is `"GLI"`.}
+
+\item{buffer_aoi}{Numeric. Buffer for automatic creation of area_of_interest. Default is 1 map units.}
+
+\item{angle_grid}{Numeric. Use to rotate the grid file when saving plot images.}
 }
 \value{
 A list containing:

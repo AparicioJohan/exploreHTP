@@ -25,6 +25,8 @@
 #' @param rededge Integer between 1 and number of layers. Layer to use as the RedEdge channel.
 #' @param nir Integer between 1 and number of layers. Layer to use as the NIR channel.
 #' @param index_no_mask Character. Calculates a vegetation index without masking. Default is `"GLI"`.
+#' @param buffer_aoi Numeric. Buffer for automatic creation of area_of_interest. Default is 1 map units.
+#' @param angle_grid Numeric. Use to rotate the grid file when saving plot images.
 #'
 #' @return A list containing:
 #'   \item{dt}{A data frame with extracted metrics for each plot across all dates.}
@@ -55,7 +57,7 @@
 #' @export
 auto_extract <- function(path_rgb = NULL,
                          path_dsm = NULL,
-                         area_of_interest,
+                         area_of_interest = NULL,
                          plot_shape,
                          plot_shape_crop,
                          indices = c("NGRDI", "BGI", "GLI"),
@@ -75,10 +77,13 @@ auto_extract <- function(path_rgb = NULL,
                          blue = 3,
                          rededge = NULL,
                          nir = NULL,
-                         index_no_mask = "GLI") {
+                         index_no_mask = "GLI",
+                         buffer_aoi = 1,
+                         angle_grid = NULL) {
   if (is.null(path_rgb)) {
     stop("Missing argument 'path_rgb'")
   }
+  lyrs <- c(red, green, blue, rededge, nir)
   path_rgb <- list.files(path_rgb, pattern = "\\.tif$", full.names = TRUE)
   if (!is.null(subset)) {
     path_rgb <- path_rgb[subset]
@@ -97,6 +102,15 @@ auto_extract <- function(path_rgb = NULL,
       stop("DSMs must match length images: ", total_imgs, "!=", total_dsm)
     }
   }
+  if (is.null(area_of_interest)) {
+    area_of_interest <- make_aoi_from_grid(plot_shape, buffer = buffer_aoi)
+  }
+  if (is.null(plot_shape_crop)) {
+    plot_shape_crop <- make_plot_shape_crop(plot_shape, buffer = 0.2)
+  } else {
+    plot_shape_crop <- plot_shape_crop |>
+      filter(.data[[plot_id]] %in% plot_shape[[plot_id]])
+  }
   data_total <- tt <- list()
   msg <- sprintf(" [%d/%d]", 1, total_imgs)
   cli_progress_step("Extracting information {msg}", spinner = TRUE)
@@ -105,7 +119,7 @@ auto_extract <- function(path_rgb = NULL,
     msg <- sprintf(" (%d/%d)", i, total_imgs)
     cli_progress_update()
     # Reading raster
-    t1 <- read_rast(path_rgb[i], area_of_interest)
+    t1 <- read_rast(path_rgb[i], area_of_interest, lyrs)
     # Detecting soil
     cli_alert_info("Removing soil")
     if (is.null(threshold)) {
@@ -126,7 +140,6 @@ auto_extract <- function(path_rgb = NULL,
     }
     cli_alert_success("Soil removed with {index_mask}")
     # Save individual plots per date
-    if (is.null(plot_shape_crop)) plot_shape_crop <- plot_shape
     if (save_plots) {
       path <- paste0(path_out, "/", trial_name, "/plot/", time[i], "/")
       create_folder_if_not_exists(path)
@@ -291,6 +304,7 @@ auto_extract <- function(path_rgb = NULL,
       plot_id = plot_id,
       path_out = path_out,
       trial_name = trial_name,
+      angle = angle_grid,
       base_size = 14,
       save_plots = save_plots,
       save_masked_plots = save_masked_plots
@@ -411,7 +425,7 @@ plot_organizer <- function(id,
       dplyr::mutate(Time = i, Plot = id)
     info[[p]] <- grid_shape
   }
-  info <- sf::st_as_sf(do.call(what = rbind, args = info))
+  info <- sf::st_as_sf(dplyr::bind_rows(info))
   df <- do.call(what = rbind, args = df) |>
     dplyr::filter(Red >= 0 & Blue >= 0 & Green >= 0) |>
     dplyr::select(x, y, Red:Blue, Time, Plot) |>
@@ -827,11 +841,11 @@ calc_height <- function(dsm_before, dsm_after) {
   return(mosaic)
 }
 
-read_rast <- function(path, area_of_interest = NULL) {
+read_rast <- function(path, area_of_interest = NULL, lyrs = NULL) {
   if (!is.null(area_of_interest)) {
-    img <- crop(rast(path), area_of_interest)
+    img <- crop(rast(path, lyrs = lyrs), area_of_interest)
   } else {
-    img <- rast(path)
+    img <- rast(path, lyrs = lyrs)
   }
   return(img)
 }
@@ -861,4 +875,53 @@ list_bands <- function(bands) {
       nir = nir
     )
   )
+}
+
+# Based on the grid file infer the area of interest
+make_aoi_from_grid <- function(plot_shape, buffer = 1) {
+  if (is.null(plot_shape)) {
+    stop("plot_shape cannot be NULL")
+  }
+  shp <- sf::st_make_valid(plot_shape)
+  if (buffer > 0) {
+    shp <- sf::st_buffer(shp, dist = buffer)
+  }
+  aoi <- sf::st_as_sfc(sf::st_bbox(shp))
+  aoi <- sf::st_as_sf(aoi)
+  sf::st_crs(aoi) <- sf::st_crs(plot_shape)
+  aoi
+}
+
+# Based on the grid file infer area to crop
+make_plot_shape_crop <- function(plot_shape, buffer = 0.2) {
+  if (is.null(plot_shape)) {
+    stop("plot_shape cannot be NULL")
+  }
+  shp <- sf::st_make_valid(plot_shape)
+  if (buffer > 0) {
+    shp <- sf::st_buffer(shp, dist = buffer)
+  }
+  shp
+}
+
+# Infer angle grid
+get_plot_angle <- function(poly) {
+  coords <- sf::st_coordinates(poly)
+  if ("L1" %in% colnames(coords)) {
+    coords <- coords[coords[, "L1"] == 1, , drop = FALSE]
+  }
+  xy <- coords[, c("X", "Y"), drop = FALSE]
+  xy <- xy[!duplicated(xy), , drop = FALSE]
+  dx <- c(diff(xy[, "X"]), xy[1, "X"] - xy[nrow(xy), "X"])
+  dy <- c(diff(xy[, "Y"]), xy[1, "Y"] - xy[nrow(xy), "Y"])
+  edge_length <- sqrt(dx^2 + dy^2)
+  i <- which.max(edge_length)
+  angle <- atan2(dy[i], dx[i]) * 180 / pi
+  # normalize to [0, 180)
+  angle <- angle %% 180
+  # convert to orientation relative to vertical
+  if (angle > 90) {
+    angle <- angle - 180
+  }
+  angle
 }
