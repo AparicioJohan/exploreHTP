@@ -11,6 +11,7 @@ Depends:
     R (>= 4.1.0)
 Imports: 
     bslib,
+    cicerone,
     cli,
     config,
     dplyr,
