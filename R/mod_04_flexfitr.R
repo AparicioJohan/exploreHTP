@@ -14,7 +14,7 @@ mod_04_flexfitr_ui <- function(id) {
       fillable = TRUE,
       sidebar = sidebar(
         open = "desktop",
-        title = "Modeling",
+        title = NULL,
         accordion(
           multiple = FALSE,
           accordion_panel(
@@ -130,7 +130,21 @@ mod_04_flexfitr_ui <- function(id) {
         )
       ),
       fluidRow(
-        h2("Inputs"),
+        # Hero Banner
+        div(
+          class = "hero-banner rounded-4 px-4 py-3 mb-3",
+          div(
+            class = "d-flex align-items-center gap-3",
+            div(class = "icon-badge icon-purple flex-shrink-0", icon("brain")),
+            div(
+              h4("Modeling", class = "fw-bold mb-0"),
+              p(
+                "Fit non-linear growth curves to phenotypic trajectories using flexFitR.",
+                class = "text-muted small mb-0"
+              )
+            )
+          )
+        ),
         column(
           width = 4,
           tags$div(

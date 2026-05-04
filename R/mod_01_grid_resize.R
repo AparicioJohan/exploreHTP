@@ -11,7 +11,21 @@ mod_01_grid_resize_ui <- function(id) {
   ns <- NS(id)
   tagList(
     fluidRow(
-      h2("Inputs"),
+      # Hero Banner
+      div(
+        class = "hero-banner rounded-4 px-4 py-3 mb-3",
+        div(
+          class = "d-flex align-items-center gap-3",
+          div(class = "icon-badge icon-orange flex-shrink-0", icon("crop")),
+          div(
+            h4("Resizer", class = "fw-bold mb-0"),
+            p(
+              "Interactively resize and rotate plot grid shapefiles before extraction.",
+              class = "text-muted small mb-0"
+            )
+          )
+        )
+      ),
       column(
         width = 4,
         fileInput(

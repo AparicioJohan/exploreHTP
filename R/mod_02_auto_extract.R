@@ -17,7 +17,7 @@ mod_02_auto_extract_ui <- function(id) {
       fillable = TRUE,
       sidebar = sidebar(
         open = "desktop",
-        title = "Autoextract",
+        title = NULL,
         actionButton(
           inputId = ns("start_autoextract_tour"),
           label = "Guide",
@@ -100,7 +100,21 @@ mod_02_auto_extract_ui <- function(id) {
         )
       ),
       fluidRow(
-        h2("Inputs"),
+        # Hero Banner
+        div(
+          class = "hero-banner rounded-4 px-4 py-3 mb-3",
+          div(
+            class = "d-flex align-items-center gap-3",
+            div(class = "icon-badge icon-green flex-shrink-0", icon("images")),
+            div(
+              h4("Autoextract", class = "fw-bold mb-0"),
+              p(
+                "Extract plot-level phenotypes from RGB and multispectral UAV imagery.",
+                class = "text-muted small mb-0"
+              )
+            )
+          )
+        ),
         column(
           width = 12,
           tags$div(

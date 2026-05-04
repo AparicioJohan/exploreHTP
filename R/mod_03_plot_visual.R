@@ -13,7 +13,7 @@ mod_03_plot_visual_ui <- function(id) {
     layout_sidebar(
       sidebar = sidebar(
         open = "desktop",
-        title = "Visualizer",
+        title = NULL,
         helpText(
           "This panel is going to help you to visualize plot information."
         ),
@@ -49,7 +49,21 @@ mod_03_plot_visual_ui <- function(id) {
         )
       ),
       fluidRow(
-        h2("Inputs"),
+        # Hero Banner
+        div(
+          class = "hero-banner rounded-4 px-4 py-3 mb-3",
+          div(
+            class = "d-flex align-items-center gap-3",
+            div(class = "icon-badge icon-blue flex-shrink-0", icon("chart-line")),
+            div(
+              h4("Visualizer", class = "fw-bold mb-0"),
+              p(
+                "Visualize and export time-series plots from cropped image data.",
+                class = "text-muted small mb-0"
+              )
+            )
+          )
+        ),
         column(
           width = 4,
           fileInput(
