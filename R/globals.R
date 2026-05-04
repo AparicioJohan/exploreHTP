@@ -25,6 +25,8 @@ utils::globalVariables(
     "dsm",
     "DSM_baseline",
     "offset",
-    "DSM_adj"
+    "DSM_adj",
+    "dsm_mean",
+    "dsm_soil_mean"
   )
 )

@@ -6,52 +6,78 @@
 #'
 #' @noRd
 #'
-#' @importFrom shiny NS tagList
+#' @importFrom shiny NS tagList icon tags div p h1 h5 actionLink
+#' @importFrom bslib card card_body layout_columns
 mod_00_home_ui <- function(id) {
   ns <- NS(id)
-  tagList(
-    fluidRow(
-      column(width = 2),
-      column(
-        width = 8,
-        br(),
-        h2("Welcome to the HTP Data Analysis App!"),
-        hr(),
-        p("This Shiny app is designed to assist researchers and plant breeders working with
-        High-Throughput Phenotyping (HTP) data. It offers user-friendly tools to extract
-        plot-level information from RGB and Multispectral images. The app simplifies
-        data handling for plant breeding experiments."),
-        h4("Explore the following modules:"),
-        tags$ol(
-          tags$li(
-            actionLink(inputId = ns("link_4"), label = strong("Modeling:")),
-            "Non-linear regression models using flexFitR for model fitting."
-          ),
-          tags$li(
-            actionLink(inputId = ns("link_1"), label = strong("Autoextract:")),
-            "extract plot-level information by providing a grid shape file and the image paths."
-          ),
-          tags$li(
-            actionLink(inputId = ns("link_2"), label = strong("Visualizer:")),
-            "visualize plot time series from cropped images generated in Autoextract."
-          ),
-          tags$li(
-            actionLink(inputId = ns("link_3"), label = strong("Resizer:")),
-            "Grid resizing tool to easily modify existing grid files."
-          )
+
+  mk_card <- function(link_id, fa_icon, title, desc, icon_class, btn_class) {
+    card(
+      fill = FALSE,
+      class = "module-card border-0 shadow-sm",
+      card_body(
+        class = "p-3 d-flex flex-row align-items-center gap-3",
+        div(class = paste0("icon-badge flex-shrink-0 ", icon_class), icon(fa_icon)),
+        div(
+          class = "flex-grow-1",
+          h6(title, class = "fw-bold mb-1"),
+          p(desc, class = "text-muted small mb-0")
         ),
-        hr(),
-        h5("Start using the app by navigating to the modules from the navbar menu."),
-        tags$div(
-          style = "margin-top: 20px;",
-          tags$img(
-            src = "www/RStudio_logo_flat.svg",
-            alt = "RStudio Logo",
-            width = "100"
+        actionLink(
+          inputId = ns(link_id),
+          label = icon("arrow-right"),
+          class = paste("btn btn-sm fw-semibold flex-shrink-0", btn_class)
+        )
+      )
+    )
+  }
+
+  div(
+    style = "max-width: 700px; margin: 0 auto;",
+
+    # Hero Banner
+    div(
+      class = "hero-banner rounded-4 px-4 py-3 mb-3",
+      div(
+        class = "d-flex align-items-center gap-3",
+        # tags$img(src = "www/logo.png", width = "48px", height = "auto"),
+        div(
+          h4("exploreHTP", class = "fw-bold mb-0"),
+          p(
+            "High-Throughput Phenotyping data analysis — extract UAV plot metrics, visualize time series, fit growth models.",
+            class = "text-muted small mb-0"
           )
         )
+      )
+    ),
+
+    # Section label
+    p("MODULES", class = "small fw-semibold text-muted letter-spacing-wide mb-2"),
+
+    # Module Cards Grid
+    layout_columns(
+      col_widths = c(12, 12, 12, 12),
+      fill = FALSE,
+      mk_card(
+        "link_1", "images", "Autoextract",
+        "Extract plot-level phenotypes from RGB and multispectral UAV images.",
+        "icon-green", "btn-outline-success"
       ),
-      column(width = 2)
+      mk_card(
+        "link_2", "chart-line", "Visualizer",
+        "Visualize and export time-series phenology plots from cropped image data.",
+        "icon-blue", "btn-outline-primary"
+      ),
+      mk_card(
+        "link_4", "brain", "Modeling",
+        "Fit non-linear growth curves to phenotypic trajectories using flexFitR.",
+        "icon-purple", "btn-outline-purple"
+      ),
+      mk_card(
+        "link_3", "crop", "Resizer",
+        "Interactively resize and rotate plot grid shapefiles before extraction.",
+        "icon-orange", "btn-outline-warning"
+      )
     )
   )
 }
