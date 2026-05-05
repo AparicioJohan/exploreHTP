@@ -69,7 +69,7 @@ mod_01_grid_resize_ui <- function(id) {
           label = "Rotation Angle (degrees)",
           min = -180,
           max = 180,
-          value = 0,
+          value = NA,
           step = 0.5,
           width = "90%"
         ),
@@ -157,6 +157,7 @@ mod_01_grid_resize_server <- function(id) {
 
     # Reactive values to store raster and simple feature data
     rasterData <- reactiveVal()
+    angleRotat <- reactiveVal()
     simpleFeature <- reactiveVal()
     simpleFeature_R <- reactiveVal()
 
@@ -175,14 +176,19 @@ mod_01_grid_resize_server <- function(id) {
     # Rotate geometry based on input angle
     observe({
       req(simpleFeature())
-      req(input$angle)
       req(input$x)
       req(input$y)
+      angle <- input$angle
+      if (is.null(angle) | angle == "" | is.na(angle)) {
+        angle <- get_plot_angle(simpleFeature()[1, ])
+        angle <- 90 - angle
+      }
+      angleRotat(angle)
       # Change dimension
       rotated_geom <- resize(
         plot_shape = simpleFeature(),
         mosaic = rasterData(),
-        angle = input$angle,
+        angle = angle,
         xsize = input$x,
         ysize = input$y
       )
@@ -245,7 +251,7 @@ mod_01_grid_resize_server <- function(id) {
         paste0(
           "shapefile_width_", input$x,
           "_length_", input$y,
-          "_angle_", input$angle, ".gpkg"
+          "_angle_", angleRotat(), ".gpkg"
         )
       },
       content = function(file) {
