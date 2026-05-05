@@ -115,173 +115,220 @@ mod_02_auto_extract_ui <- function(id) {
             )
           )
         ),
-        column(
-          width = 12,
-          tags$div(
-            style = "display: flex; align-items: center; gap: 10px;",
-            tags$div(
-              id = ns("guide_plot_shape"),
-              fileInput(
-                inputId = ns("plot_shape"),
-                label = "Grid Shapefile (.gpkg)",
-                accept = c(".gpkg"),
-                width = "100%",
-                placeholder = "Grid Shapefile (.gpkg)"
-              )
-            ),
-            tags$div(
-              id = ns("guide_view_shape"),
-              actionButton(
-                inputId = ns("view_shape"),
-                icon = icon("eye"),
-                label = NULL,
-                class = "btn-primary"
-              )
-            ),
-            tags$div(
-              id = ns("guide_directory_rgb"),
-              shinyDirButton(
-                id = ns("directory_rgb"),
-                label = "Images Directory",
-                title = "Choose any folder",
-                icon = icon("magnifying-glass")
-              )
-            ),
-            tags$div(
-              id = ns("guide_subset_img"),
-              shinyWidgets::dropdownButton(
-                tags$strong("Subset Images"),
-                circle = FALSE,
-                label = "Subset",
-                icon = icon("filter"),
-                width = "400px",
-                margin = "20px",
-                br(),
-                shinyWidgets::pickerInput(
-                  inputId = ns("subset_img"),
-                  label = NULL,
-                  choices = NULL,
-                  multiple = TRUE,
-                  options = shinyWidgets::pickerOptions(
-                    container = "body",
-                    actionsBox = TRUE,
-                    size = 5
-                  ),
-                  width = "100%"
+        card(
+          fluidRow(
+            column(
+              width = 12,
+              tags$div(
+                style = "display: flex; align-items: center; gap: 10px;",
+                tags$div(
+                  id = ns("guide_plot_shape"),
+                  fileInput(
+                    inputId = ns("plot_shape"),
+                    label = "Grid Shapefile (.gpkg)",
+                    accept = c(".gpkg"),
+                    width = "100%",
+                    placeholder = "Grid Shapefile (.gpkg)"
+                  )
+                ),
+                tags$div(
+                  id = ns("guide_view_shape"),
+                  actionButton(
+                    inputId = ns("view_shape"),
+                    icon = icon("eye"),
+                    label = NULL,
+                    class = "btn-primary"
+                  )
+                ),
+                tags$div(
+                  id = ns("guide_directory_rgb"),
+                  shinyDirButton(
+                    id = ns("directory_rgb"),
+                    label = "Images Directory",
+                    title = "Choose any folder",
+                    icon = icon("magnifying-glass")
+                  )
+                ),
+                tags$div(
+                  id = ns("guide_subset_img"),
+                  shinyWidgets::dropdownButton(
+                    tags$strong("Subset Images"),
+                    circle = FALSE,
+                    label = "Subset",
+                    icon = icon("filter"),
+                    width = "400px",
+                    margin = "20px",
+                    br(),
+                    shinyWidgets::pickerInput(
+                      inputId = ns("subset_img"),
+                      label = NULL,
+                      choices = NULL,
+                      multiple = TRUE,
+                      options = shinyWidgets::pickerOptions(
+                        container = "body",
+                        actionsBox = TRUE,
+                        size = 5
+                      ),
+                      width = "100%"
+                    )
+                  )
+                ),
+                tags$div(
+                  id = ns("guide_optional_inputs"),
+                  tags$script(HTML("
+                    $(document).on('mousedown', function(e) {
+                      if (!$(e.target).closest('.bslib-popover, [data-bs-toggle=popover]').length) {
+                        $('[data-bs-toggle=popover]').popover('hide');
+                      }
+                    });
+                  ")),
+                  bslib::popover(
+                    id = ns("optional_popover"),
+                    trigger = actionButton(
+                      inputId = ns("more_btn"),
+                      label = "More",
+                      icon = icon("plus")
+                    ),
+                    title = "Optional Inputs",
+                    placement = "bottom",
+                    br(),
+                    shinyDirButton(
+                      id = ns("directory_dsm"),
+                      label = "DSM Directory",
+                      title = "Choose any folder",
+                      icon = icon("magnifying-glass"),
+                      style = "margin-bottom: 25px;"
+                    ),
+                    fileInput(
+                      inputId = ns("plot_shape_crop"),
+                      label = helpText("Shapefile to Crop (Optional)"),
+                      accept = c(".gpkg"),
+                      width = "100%"
+                    ),
+                    fileInput(
+                      inputId = ns("area"),
+                      label = helpText("Area of Interest (Optional)"),
+                      accept = c(".gpkg"),
+                      width = "100%"
+                    )
+                  )
+                  # shinyWidgets::dropdownButton(
+                  #   circle = FALSE,
+                  #   label = "More",
+                  #   icon = icon("plus"),
+                  #   width = "400px",
+                  #   margin = "20px",
+                  #   up = FALSE,
+                  #   shinyDirButton(
+                  #     id = ns("directory_dsm"),
+                  #     label = "DSM Directory",
+                  #     title = "Choose any folder",
+                  #     icon = icon("magnifying-glass"),
+                  #     style = "margin-bottom: 25px;"
+                  #   ),
+                  #   fileInput(
+                  #     inputId = ns("plot_shape_crop"),
+                  #     label = helpText("Shapefile to Crop (Optional)"),
+                  #     accept = c(".gpkg"),
+                  #     width = "100%"
+                  #   ),
+                  #   fileInput(
+                  #     inputId = ns("area"),
+                  #     label = helpText("Area of Interest (Optional)"),
+                  #     accept = c(".gpkg"),
+                  #     width = "100%"
+                  #   )
+                  # )
                 )
               )
             ),
-            tags$div(
-              id = ns("guide_optional_inputs"),
-              shinyWidgets::dropdownButton(
-                tags$strong("Optional Inputs"),
-                circle = FALSE,
-                label = "More",
-                icon = icon("plus"),
-                width = "400px",
-                margin = "20px",
-                br(),
-                shinyDirButton(
-                  id = ns("directory_dsm"),
-                  label = "DSM Directory",
-                  title = "Choose any folder",
-                  icon = icon("magnifying-glass"),
-                  style = "margin-bottom: 25px;"
-                ),
-                fileInput(
-                  inputId = ns("plot_shape_crop"),
-                  label = helpText("Shapefile to Crop (Optional)"),
-                  accept = c(".gpkg"),
-                  width = "100%"
-                ),
-                fileInput(
-                  inputId = ns("area"),
-                  label = helpText("Area of Interest (Optional)"),
-                  accept = c(".gpkg"),
-                  width = "100%"
-                )
-              )
-            )
-          )
-        ),
-        column(
-          width = 12,
-          uiOutput(ns("dirPathRGB"))
-        ),
-        column(
-          width = 4,
-          tags$div(
-            id = ns("guide_rgb_bands"),
-            textInput(
-              inputId = ns("rgb_bands"),
-              label = "RGB/RedEdge/NIR:",
-              value = "1, 2, 3",
-              width = "90%"
-            )
-          ),
-          tags$div(
-            id = ns("guide_indices"),
-            selectInput(
-              inputId = ns("indices"),
-              label = tagList(
-                "Select Indices:",
-                actionLink(
-                  inputId = ns("view_indices"),
-                  icon = icon("eye"),
-                  label = "View"
+            column(
+              width = 12,
+              uiOutput(ns("dirPathRGB"))
+            ),
+            column(
+              width = 4,
+              tags$div(
+                id = ns("guide_rgb_bands"),
+                textInput(
+                  inputId = ns("rgb_bands"),
+                  label = "RGB/RedEdge/NIR:",
+                  value = "1, 2, 3",
+                  width = "90%"
                 )
               ),
-              choices = list("RGB" = rgb_list, "Multispectral" = mts_list),
-              selected = c("GLI", "NGRDI", "BGI"),
-              multiple = TRUE,
-              width = "90%"
-            )
-          )
-        ),
-        column(
-          width = 4,
-          tags$div(
-            id = ns("guide_plot_id"),
-            selectInput(
-              inputId = ns("plot_id"),
-              label = "Select Plot ID:",
-              choices = NULL,
-              width = "90%"
-            )
-          ),
-          tags$div(
-            id = ns("guide_days"),
-            textInput(
-              inputId = ns("days"),
-              label = "Days (comma-separated):",
-              value = "",
-              placeholder = "28, 42, 50, ...",
-              width = "90%"
-            )
-          )
-        ),
-        column(
-          width = 4,
-          # Text input for experiment name
-          textInput(
-            inputId = ns("trial_name"),
-            label = "Experiment Name:",
-            value = "HARS22_chips",
-            width = "90%"
-          ),
-          tags$div(
-            id = ns("guide_output"),
-            shinyDirButton(
-              id = ns("directory_out"),
-              label = "Output Directory",
-              title = "Choose any folder",
-              icon = icon("magnifying-glass")
+              tags$div(
+                id = ns("guide_indices"),
+                selectizeInput(
+                  inputId = ns("indices"),
+                  label = tagList(
+                    "Select Indices:",
+                    actionLink(
+                      inputId = ns("view_indices"),
+                      icon = icon("eye"),
+                      label = "View"
+                    )
+                  ),
+                  choices = list("RGB" = rgb_list, "Multispectral" = mts_list),
+                  selected = c("GLI", "NGRDI", "BGI"),
+                  multiple = TRUE,
+                  width = "90%",
+                  options = list(dropdownParent = 'body')
+                )
+              )
             ),
-            actionButton(ns("submit"), "Submit", icon = icon("thumbs-up"))
-          ),
-          uiOutput(ns("dirPathOut"))
+            column(
+              width = 4,
+              tags$div(
+                id = ns("guide_plot_id"),
+                selectInput(
+                  inputId = ns("plot_id"),
+                  label = "Select Plot ID:",
+                  choices = NULL,
+                  width = "90%"
+                )
+              ),
+              tags$div(
+                id = ns("guide_days"),
+                textInput(
+                  inputId = ns("days"),
+                  label = "Days (comma-separated):",
+                  value = "",
+                  placeholder = "28, 42, 50, ...",
+                  width = "90%"
+                )
+              )
+            ),
+            column(
+              width = 4,
+              # Text input for experiment name
+              textInput(
+                inputId = ns("trial_name"),
+                label = "Experiment Name:",
+                value = "HARS22_chips",
+                width = "90%"
+              ),
+              tags$div(
+                id = ns("guide_output"),
+                shinyDirButton(
+                  id = ns("directory_out"),
+                  label = "Output Directory",
+                  title = "Choose any folder",
+                  icon = icon("magnifying-glass")
+                ),
+                actionButton(
+                  ns("submit"),
+                  "Submit",
+                  icon = icon("play"),
+                  class = "btn-primary flex-shrink-0"
+                )
+                # actionButton(ns("submit"), "Submit", icon = icon("thumbs-up"))
+              ),
+              uiOutput(ns("dirPathOut"))
+            )
+          )
         ),
-        column(width = 12, br(), uiOutput(ns("ui_plot")))
+        uiOutput(ns("ui_plot"))
       )
     )
   )
@@ -789,9 +836,9 @@ mod_02_auto_extract_server <- function(id) {
     output$ui_plot <- renderUI({
       req(results())
       card(
-        full_screen = TRUE,
-        card_header(tagList(icon = icon("chart-line"), "Data")),
-        DTOutput(ns("data_table"))
+        fluidRow(
+          column(width = 12, DTOutput(ns("data_table")))
+        )
       )
     })
   })

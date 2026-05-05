@@ -1,0 +1,12 @@
+name: exploreHTP
+title: exploreHTP
+username: uw-madison
+account: uw-madison
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 13618366
+bundleId: 11953400
+url: https://uw-madison.shinyapps.io/exploreHTP/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE

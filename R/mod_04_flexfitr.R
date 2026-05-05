@@ -145,121 +145,132 @@ mod_04_flexfitr_ui <- function(id) {
             )
           )
         ),
-        column(
-          width = 4,
-          tags$div(
-            style = "display: flex; align-items: center; gap: 10px;",
-            fileInput(
-              inputId = ns("file_extract"),
-              label = "Choose File (.csv)",
-              accept = c(".csv"),
-              width = "70%"
-            ),
-            actionButton(
-              ns("view_file"),
-              icon = icon("eye"),
-              label = NULL,
-              class = "btn-primary"
-            )
-          ),
-          selectInput(
-            inputId = ns("select_x"),
-            label = "Select x-variable:",
-            choices = NULL,
-            multiple = FALSE,
-            width = "90%"
-          ),
-          selectInput(
-            inputId = ns("select_y"),
-            label = tagList(
-              "Select y-variable:",
-              actionLink(
-                inputId = ns("view_scatter"),
-                icon = icon("eye"),
-                label = "View"
-              )
-            ),
-            choices = c("Canopy", "GLI"),
-            selected = c("Canopy"),
-            multiple = FALSE,
-            width = "90%"
-          )
-        ),
-        column(
-          width = 4,
-          br(),
-          tags$div(
-            style = "display: flex; align-items: center; gap: 10px;",
-            selectInput(
-              inputId = ns("functions"),
-              label = tagList(
-                "Regression Function:",
-                actionLink(
-                  inputId = ns("view_fun"),
-                  icon = icon("eye"),
-                  label = "View"
+        card(
+          fluidRow(
+            column(
+              width = 4,
+              tags$div(
+                style = "display: flex; align-items: center; gap: 10px;",
+                fileInput(
+                  inputId = ns("file_extract"),
+                  label = "Choose File (.csv)",
+                  accept = c(".csv"),
+                  width = "70%"
                 ),
-                actionLink(
-                  inputId = ns("add_fun"),
-                  icon = icon("plus"),
-                  label = "Add"
+                actionButton(
+                  ns("view_file"),
+                  icon = icon("eye"),
+                  label = NULL,
+                  class = "btn-primary"
                 )
               ),
-              choices = c(list_funs(), "fn_custom"),
-              selected = c("fn_lin"),
-              multiple = FALSE,
-              width = "90%"
-            )
-          ),
-          selectInput(
-            inputId = ns("methods"),
-            label = tagList(
-              "Optimization Methods",
-              actionLink(
-                inputId = ns("view_methods"),
-                icon = icon("eye"),
-                label = "View"
+              selectizeInput(
+                inputId = ns("select_x"),
+                label = "Select x-variable:",
+                choices = NULL,
+                multiple = FALSE,
+                width = "90%",
+                options = list(dropdownParent = 'body')
+              ),
+              selectizeInput(
+                inputId = ns("select_y"),
+                label = tagList(
+                  "Select y-variable:",
+                  actionLink(
+                    inputId = ns("view_scatter"),
+                    icon = icon("eye"),
+                    label = "View"
+                  )
+                ),
+                choices = c("Canopy", "GLI"),
+                selected = c("Canopy"),
+                multiple = FALSE,
+                width = "90%",
+                options = list(dropdownParent = 'body')
               )
             ),
-            choices = c(unname(list_methods()), "ALL"),
-            selected = c("subplex"),
-            multiple = TRUE,
-            width = "90%"
-          ),
-          selectInput(
-            inputId = ns("metadata"),
-            label = "Metadata (Optional):",
-            choices = NULL,
-            multiple = TRUE,
-            width = "90%"
-          )
-        ),
-        column(
-          width = 4,
-          br(),
-          selectInput(
-            inputId = ns("group"),
-            label = "Grouping (Optional):",
-            choices = NULL,
-            width = "90%",
-            multiple = FALSE
-          ),
-          shinyWidgets::pickerInput(
-            inputId = ns("uid"),
-            label = "Subset Group:",
-            choices = NULL,
-            multiple = TRUE,
-            options = shinyWidgets::pickerOptions(
-              container = "body",
-              actionsBox = TRUE,
-              size = 5,
-              liveSearch = TRUE
+            column(
+              width = 4,
+              br(),
+              tags$div(
+                style = "display: flex; align-items: center; gap: 10px;",
+                selectizeInput(
+                  inputId = ns("functions"),
+                  label = tagList(
+                    "Regression Function:",
+                    actionLink(
+                      inputId = ns("view_fun"),
+                      icon = icon("eye"),
+                      label = "View"
+                    ),
+                    actionLink(
+                      inputId = ns("add_fun"),
+                      icon = icon("plus"),
+                      label = "Add"
+                    )
+                  ),
+                  choices = c(list_funs(), "fn_custom"),
+                  selected = c("fn_lin"),
+                  multiple = FALSE,
+                  width = "90%",
+                  options = list(dropdownParent = 'body')
+
+                )
+              ),
+              selectizeInput(
+                inputId = ns("methods"),
+                label = tagList(
+                  "Optimization Methods",
+                  actionLink(
+                    inputId = ns("view_methods"),
+                    icon = icon("eye"),
+                    label = "View"
+                  )
+                ),
+                choices = c(unname(list_methods()), "ALL"),
+                selected = c("subplex"),
+                multiple = TRUE,
+                width = "90%",
+                options = list(dropdownParent = 'body')
+              ),
+              selectizeInput(
+                inputId = ns("metadata"),
+                label = "Metadata (Optional):",
+                choices = NULL,
+                multiple = TRUE,
+                width = "90%",
+                options = list(dropdownParent = 'body')
+              )
             ),
-            width = "95%"
-          ),
-          # Submit button
-          actionButton(ns("submit"), "Submit", icon = icon("thumbs-up")),
-          actionButton(ns("summary"), "Summary", icon = icon("eye"))
+            column(
+              width = 4,
+              br(),
+              selectizeInput(
+                inputId = ns("group"),
+                label = "Grouping (Optional):",
+                choices = NULL,
+                width = "90%",
+                multiple = FALSE,
+                options = list(dropdownParent = 'body')
+              ),
+              shinyWidgets::pickerInput(
+                inputId = ns("uid"),
+                label = "Subset Group:",
+                choices = NULL,
+                multiple = TRUE,
+                options = shinyWidgets::pickerOptions(
+                  container = "body",
+                  actionsBox = TRUE,
+                  size = 5,
+                  liveSearch = TRUE
+                ),
+                width = "95%"
+              ),
+              # Submit button
+              actionButton(ns("submit"), "Submit", icon = icon("thumbs-up")),
+              actionButton(ns("summary"), "Summary", icon = icon("eye"))
+            )
+          )
         ),
         column(width = 12, br(), uiOutput(ns("ui_plot")))
       )
