@@ -114,7 +114,7 @@ mod_03_plot_visual_ui <- function(id) {
             label = "Rotation Angle (degrees)",
             min = -180,
             max = 180,
-            value = 0,
+            value = NA,
             step = 0.5,
             width = "90%"
           ),
@@ -174,7 +174,7 @@ mod_03_plot_visual_server <- function(id, dark_mode) {
             quiet = TRUE
           )
         }
-        out <- do.call(what = rbind, args = out)
+        out <- dplyr::bind_rows(out)
       } else {
         out <- NULL
       }
@@ -229,6 +229,10 @@ mod_03_plot_visual_server <- function(id, dark_mode) {
         color_val <- "red"
         color <- "black"
         if (input$apply_angle) angle <- input$angle else angle <- NULL
+        if (input$angle == "auto" | is.null(input$angle) | is.na(input$angle)) {
+          angle <- get_plot_angle(plot_shape()[1, ])
+          angle <- angle - 90
+        }
         shinyalert(
           title = "Are you sure?",
           text = "Do you want to proceed with this action?",
