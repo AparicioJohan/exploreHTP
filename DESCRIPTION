@@ -25,7 +25,6 @@ Imports:
     mapview,
     methods,
     openxlsx,
-    pkgload,
     plotly,
     raster,
     sf,

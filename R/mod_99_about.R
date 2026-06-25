@@ -22,7 +22,7 @@ mod_99_about_ui <- function(id) {
         div(class = "icon-badge icon-blue flex-shrink-0", icon("circle-info")),
         div(
           h4("About exploreHTP", class = "fw-bold mb-0"),
-          p("Version 1.0.0 · High-Throughput Phenotyping data analysis", class = "text-muted small mb-0")
+          p("Version 1.0.0 - High-Throughput Phenotyping data analysis", class = "text-muted small mb-0")
         )
       )
     ),
@@ -80,7 +80,7 @@ mod_99_about_ui <- function(id) {
             icon("user-tie", class = "text-muted mt-1 small flex-shrink-0"),
             p(
               strong("Jeffrey Endelman"),
-              " — for his guidance and support throughout the development of this application.",
+              " - for his guidance and support throughout the development of this application.",
               class = "text-muted small mb-0"
             )
           ),
@@ -89,7 +89,7 @@ mod_99_about_ui <- function(id) {
             icon("box-open", class = "text-muted mt-1 small flex-shrink-0"),
             p(
               strong("Filipe Matias"),
-              " — for his contributions to the ",
+              " - for his contributions to the ",
               tags$a(
                 "FieldImageR",
                 href = "https://github.com/OpenDroneMap/FIELDimageR",

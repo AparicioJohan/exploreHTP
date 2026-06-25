@@ -44,7 +44,7 @@ mod_00_home_ui <- function(id) {
         div(
           h4("exploreHTP", class = "fw-bold mb-0"),
           p(
-            "High-Throughput Phenotyping data analysis — extract UAV plot metrics, visualize time series, fit growth models.",
+            "High-Throughput Phenotyping data analysis - extract UAV plot metrics, visualize time series, fit growth models.",
             class = "text-muted small mb-0"
           )
         )

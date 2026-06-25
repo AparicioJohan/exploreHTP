@@ -334,53 +334,122 @@ create_folder_if_not_exists <- function(path) {
   }
 }
 
+## Old version (slow)
+# crop_grid <- function(mosaic,
+#                       shp,
+#                       plot_id = NULL,
+#                       out_dir = "./") {
+#   # msgs <- "..."
+#   # cli_progress_step("Saving mosaics {msgs}", spinner = TRUE)
+#   cli_progress_message(msg = paste0("Saving mosaics ..."))
+#   stars_object <- mosaic
+#   if (class(mosaic) %in% c("RasterStack", "RasterLayer", "RasterBrick")) {
+#     mosaic <- terra::rast(mosaic)
+#   }
+#   nbands <- nlyr(mosaic)
+#   if (!inherits(stars_object, "stars")) {
+#     stars_object <- stars::st_as_stars(mosaic)
+#   }
+#   if (!sf::st_is_longlat(stars_object) && nbands > 2) {
+#     stars_object <- stars::st_warp(stars_object, crs = 4326)
+#   }
+#   if (!sf::st_is_longlat(shp)) {
+#     shp <- sf::st_transform(shp, crs = 4326)
+#   }
+#   total_ids <- nrow(shp)
+#   cli_progress_bar(
+#     format = paste0("Saving mosaics [{pb_current}/{pb_total}]"),
+#     total = total_ids
+#   )
+#   for (i in seq_len(total_ids)) {
+#     msgs <- sprintf(" (%d/%d)", i, total_ids)
+#     cli_progress_update()
+#     grid_poly <- shp[i, ]
+#     grid_poly <- sf::st_transform(grid_poly, crs = sf::st_crs(stars_object))
+#     plot_raster <- sf::st_crop(stars_object, grid_poly)
+#     if (nbands > 2) {
+#       plot_raster <- stars::st_warp(plot_raster, crs = sf::st_crs(mosaic))
+#       plot_raster[is.na(plot_raster)] <- 0
+#     }
+#     if (nbands == 1) {
+#       plot_raster <- stars::st_warp(plot_raster, crs = sf::st_crs(mosaic))
+#       plot_raster[is.na(plot_raster)] <- NA
+#     }
+#     file_name <- paste0("ID_", shp[[plot_id]][i], ".tif")
+#     file_path <- file.path(out_dir, file_name)
+#     plot_raster <- methods::as(plot_raster, "Raster")
+#     plot_raster <- terra::rast(plot_raster)
+#     terra::writeRaster(plot_raster, file_path, overwrite = TRUE)
+#   }
+# }
+
+
 crop_grid <- function(mosaic,
                       shp,
                       plot_id = NULL,
-                      out_dir = "./") {
-  # msgs <- "..."
-  # cli_progress_step("Saving mosaics {msgs}", spinner = TRUE)
-  cli_progress_message(msg = paste0("Saving mosaics ..."))
-  stars_object <- mosaic
-  if (class(mosaic) %in% c("RasterStack", "RasterLayer", "RasterBrick")) {
+                      out_dir = "./",
+                      mask_plots = FALSE) {
+  cli::cli_progress_message(msg = "Saving mosaics ...")
+  dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+  # Convert old raster objects to terra
+  if (inherits(mosaic, c("RasterStack", "RasterLayer", "RasterBrick"))) {
     mosaic <- terra::rast(mosaic)
   }
-  nbands <- nlyr(mosaic)
-  if (!inherits(stars_object, "stars")) {
-    stars_object <- stars::st_as_stars(mosaic)
+  if (!inherits(mosaic, "SpatRaster")) {
+    stop("mosaic must be a terra SpatRaster or raster object.")
   }
-  if (!sf::st_is_longlat(stars_object) && nbands > 2) {
-    stars_object <- stars::st_warp(stars_object, crs = 4326)
+  if (!inherits(shp, "sf")) {
+    stop("shp must be an sf object.")
   }
-  if (!sf::st_is_longlat(shp)) {
-    shp <- sf::st_transform(shp, crs = 4326)
+  nbands <- terra::nlyr(mosaic)
+  # Use row number if plot_id is not provided
+  if (is.null(plot_id)) {
+    ids <- seq_len(nrow(shp))
+  } else {
+    if (!plot_id %in% names(shp)) {
+      stop("plot_id column not found in shp.")
+    }
+    ids <- shp[[plot_id]]
   }
+  # Important: transform polygons to raster CRS, not raster to polygon CRS
+  shp <- sf::st_transform(shp, crs = terra::crs(mosaic))
+  # Convert sf to terra vector
+  shp_vect <- terra::vect(shp)
   total_ids <- nrow(shp)
-  cli_progress_bar(
-    format = paste0("Saving mosaics [{pb_current}/{pb_total}]"),
+  cli::cli_progress_bar(
+    format = "Saving mosaics [{pb_current}/{pb_total}]",
     total = total_ids
   )
   for (i in seq_len(total_ids)) {
-    msgs <- sprintf(" (%d/%d)", i, total_ids)
-    cli_progress_update()
-    grid_poly <- shp[i, ]
-    grid_poly <- sf::st_transform(grid_poly, crs = sf::st_crs(stars_object))
-    plot_raster <- sf::st_crop(stars_object, grid_poly)
+    cli::cli_progress_update()
+    grid_poly <- shp_vect[i]
+    # Crop raster to plot extent
+    plot_raster <- terra::crop(
+      mosaic,
+      grid_poly,
+      snap = "out",
+      mask = TRUE,
+      touches = TRUE
+    )
+    # Optional: mask outside polygon
+    if (mask_plots) {
+      plot_raster <- terra::mask(plot_raster, grid_poly)
+    }
+    # For RGB/multiband images, replace NA with 0 if needed
     if (nbands > 2) {
-      plot_raster <- stars::st_warp(plot_raster, crs = sf::st_crs(mosaic))
-      plot_raster[is.na(plot_raster)] <- 0
+      plot_raster <- terra::ifel(is.na(plot_raster), 0, plot_raster)
     }
-    if (nbands == 1) {
-      plot_raster <- stars::st_warp(plot_raster, crs = sf::st_crs(mosaic))
-      plot_raster[is.na(plot_raster)] <- NA
-    }
-    file_name <- paste0("ID_", shp[[plot_id]][i], ".tif")
+    file_name <- paste0("ID_", ids[i], ".tif")
     file_path <- file.path(out_dir, file_name)
-    plot_raster <- methods::as(plot_raster, "Raster")
-    plot_raster <- terra::rast(plot_raster)
     terra::writeRaster(plot_raster, file_path, overwrite = TRUE)
+    rm(plot_raster)
+    if (i %% 20 == 0) {
+      gc()
+    }
   }
+  cli::cli_progress_done()
 }
+
 
 plot_organizer <- function(id,
                            plot_id = NULL,
@@ -430,17 +499,20 @@ plot_organizer <- function(id,
     dplyr::filter(Red >= 0 & Blue >= 0 & Green >= 0) |>
     dplyr::select(x, y, Red:Blue, Time, Plot) |>
     na.omit()
+  df <- df |>
+    dplyr::mutate(
+      Red   = pmin(pmax(Red, 0), 255),
+      Green = pmin(pmax(Green, 0), 255),
+      Blue  = pmin(pmax(Blue, 0), 255),
+      RGB = rgb(
+        red = Red,
+        green = Green,
+        blue = Blue,
+        maxColorValue = 255
+      )
+    )
   if (remove_border) {
-    df <- df |>
-      dplyr::mutate(
-        RGB = rgb(
-          red = Red,
-          green = Green,
-          blue = Blue,
-          maxColorValue = 255
-        )
-      ) |>
-      dplyr::filter(!RGB %in% "#000000")
+    df <- dplyr::filter(df, RGB != "#000000")
   }
   p0 <- df |>
     ggplot() +
