@@ -280,6 +280,12 @@ auto_extract <- function(path_rgb = NULL,
     st_write(dt_tmp, w_save, layer = time[i], append = FALSE, quiet = TRUE)
     cli_alert_info(".gpkg file exported: {.path {w_save}}.")
     cli_alert_success("Extraction succeded")
+    # Cleanup
+    rm(t1, t1_ns, t1_indices, t1_info, dt_tmp)
+    if (!is.null(index_no_mask)) rm(t1_no_mask, t1_info_no_mask)
+    if (!is.null(path_dsm)) rm(dsm_k, chm, chm_rem_soil, ph, ph_vol)
+    terra::tmpFiles(remove = TRUE)
+    gc()
   }
   cli_h1("")
   # Data with all indices across dates
