@@ -6,7 +6,7 @@
 <!-- badges: start -->
 
 [![Lifecycle:
-experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
 <!-- badges: end -->
 
 ## Installation
@@ -14,8 +14,8 @@ experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](h
 You can install the development version of `{exploreHTP}` like so:
 
 ``` r
-# install.packages("devtools")
-devtools::install_github("AparicioJohan/exploreHTP")
+# install.packages("pak")
+pak::pkg_install("AparicioJohan/exploreHTP")
 ```
 
 ## Run
@@ -41,5 +41,5 @@ This README has been compiled on the
 
 ``` r
 Sys.time()
-#> [1] "2025-05-01 15:35:24 CDT"
+#> [1] "2026-07-27 10:23:18 CDT"
 ```
