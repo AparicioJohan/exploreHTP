@@ -62,9 +62,9 @@
 #' library(ggplot2)
 #'
 #' # Inputs
-#' in_dir  <- "data/dsm_raw"
+#' in_dir <- "data/dsm_raw"
 #' out_dir <- "data/dsm_aligned"
-#' gcp     <- "data/ground_control.gpkg"  # must have column ID
+#' gcp <- "data/ground_control.gpkg" # must have column ID
 #'
 #' # Time labels (first is baseline)
 #' tvec <- c("2025-06-01", "2025-06-10", "2025-06-20")
@@ -79,8 +79,8 @@
 #'
 #' # Inspect offsets and plots
 #' res$offsets
-#' res$plot[[1]]  # before
-#' res$plot[[2]]  # after
+#' res$plot[[1]] # before
+#' res$plot[[2]] # after
 #' }
 #'
 #' @seealso [terra::rast()], [terra::extract()], [sf::read_sf()], [ggplot2::ggplot]

@@ -27,11 +27,12 @@
 #' @importFrom stats coef AIC BIC setNames
 #' @importFrom DT renderDT datatable DTOutput
 run_app <- function(
-    onStart = NULL,
-    options = list(launch.browser = TRUE),
-    enableBookmarking = NULL,
-    uiPattern = "/",
-    ...) {
+  onStart = NULL,
+  options = list(launch.browser = TRUE),
+  enableBookmarking = NULL,
+  uiPattern = "/",
+  ...
+) {
   options(shiny.maxRequestSize = 5000 * 1024^2)
   with_golem_options(
     app = shinyApp(

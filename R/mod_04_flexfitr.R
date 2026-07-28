@@ -170,7 +170,7 @@ mod_04_flexfitr_ui <- function(id) {
                 choices = NULL,
                 multiple = FALSE,
                 width = "90%",
-                options = list(dropdownParent = 'body')
+                options = list(dropdownParent = "body")
               ),
               selectizeInput(
                 inputId = ns("select_y"),
@@ -186,7 +186,7 @@ mod_04_flexfitr_ui <- function(id) {
                 selected = c("Canopy"),
                 multiple = FALSE,
                 width = "90%",
-                options = list(dropdownParent = 'body')
+                options = list(dropdownParent = "body")
               )
             ),
             column(
@@ -213,8 +213,7 @@ mod_04_flexfitr_ui <- function(id) {
                   selected = c("fn_lin"),
                   multiple = FALSE,
                   width = "90%",
-                  options = list(dropdownParent = 'body')
-
+                  options = list(dropdownParent = "body")
                 )
               ),
               selectizeInput(
@@ -231,7 +230,7 @@ mod_04_flexfitr_ui <- function(id) {
                 selected = c("subplex"),
                 multiple = TRUE,
                 width = "90%",
-                options = list(dropdownParent = 'body')
+                options = list(dropdownParent = "body")
               ),
               selectizeInput(
                 inputId = ns("metadata"),
@@ -239,7 +238,7 @@ mod_04_flexfitr_ui <- function(id) {
                 choices = NULL,
                 multiple = TRUE,
                 width = "90%",
-                options = list(dropdownParent = 'body')
+                options = list(dropdownParent = "body")
               )
             ),
             column(
@@ -251,7 +250,7 @@ mod_04_flexfitr_ui <- function(id) {
                 choices = NULL,
                 width = "90%",
                 multiple = FALSE,
-                options = list(dropdownParent = 'body')
+                options = list(dropdownParent = "body")
               ),
               shinyWidgets::pickerInput(
                 inputId = ns("uid"),
