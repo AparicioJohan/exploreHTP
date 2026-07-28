@@ -492,7 +492,7 @@ mod_02_auto_extract_server <- function(id) {
 
     observeEvent(input$view_names_img, {
       showModal(modalDialog(
-        title = tagList(icon = icon("table-cells"), "View names"),
+        title = tagList(icon = icon("table-cells"), "View Names"),
         size = "l",
         easyClose = TRUE,
         footer = NULL,
