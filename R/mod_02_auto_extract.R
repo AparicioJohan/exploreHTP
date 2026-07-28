@@ -758,7 +758,8 @@ mod_02_auto_extract_server <- function(id) {
         x = plot_shape(),
         alpha.regions = 0.5,
         aplha = 1,
-        zcol = input$color_by
+        zcol = input$color_by,
+        legend = FALSE
       )
       map@map
     })
@@ -812,9 +813,11 @@ mod_02_auto_extract_server <- function(id) {
               selected = "All",
               multiple = TRUE,
               options = shinyWidgets::pickerOptions(
-                container = "body",
+                # container = "body",
                 style = "btn-outline-secondary",
-                actionsBox = TRUE
+                actionsBox = TRUE,
+                liveSearch = TRUE,
+                size = 5
               )
             )
           )
