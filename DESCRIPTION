@@ -27,6 +27,7 @@ Imports:
     openxlsx,
     plotly,
     raster,
+    rlang,
     sf,
     shiny,
     shinyalert,
