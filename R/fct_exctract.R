@@ -507,9 +507,9 @@ plot_organizer <- function(id,
     na.omit()
   df <- df |>
     dplyr::mutate(
-      Red   = pmin(pmax(Red, 0), 255),
+      Red = pmin(pmax(Red, 0), 255),
       Green = pmin(pmax(Green, 0), 255),
-      Blue  = pmin(pmax(Blue, 0), 255),
+      Blue = pmin(pmax(Blue, 0), 255),
       RGB = rgb(
         red = Red,
         green = Green,
@@ -681,7 +681,6 @@ plot_time_series <- function(plot_shape,
     k <- k + 1
   }
 }
-
 
 
 extract_shp <- function(mosaic, shp = NULL, fun = "mean", progress = FALSE) {
@@ -1002,4 +1001,72 @@ get_plot_angle <- function(poly) {
     angle <- angle - 180
   }
   angle
+}
+
+# Otsu
+otsu_threshold <- function(x, bins = 256L) {
+  x <- x[is.finite(x)]
+  if (length(x) < 2L || length(unique(x)) < 2L) {
+    return(NA_real_)
+  }
+  h <- hist(x, breaks = bins, plot = FALSE)
+  probabilities <- h$counts / sum(h$counts)
+  cumulative_probability <- cumsum(probabilities)
+  cumulative_mean <- cumsum(probabilities * h$mids)
+  total_mean <- sum(probabilities * h$mids)
+  denominator <- cumulative_probability * (1 - cumulative_probability)
+  numerator <- (total_mean * cumulative_probability - cumulative_mean)^2
+  between_class_variance <- numerator / denominator
+  valid <- which(is.finite(between_class_variance))
+  if (length(valid) == 0L) {
+    return(NA_real_)
+  }
+  best_bin <- valid[which.max(between_class_variance[valid])]
+  # Boundary between the two Otsu classes
+  h$breaks[best_bin + 1L]
+}
+
+# Extract sample to plot histogram
+#' @import graphics
+extract_sample <- function(path,
+                           id,
+                           index,
+                           n = 500,
+                           red = 1,
+                           green = 2,
+                           blue = 3,
+                           rededge = NULL,
+                           nir = NULL) {
+  sample_size <- n
+  df_index <- exploreHTP::indices
+  lyrs <- c(red, green, blue, rededge, nir)
+  equation <- df_index[df_index$index == index, ]
+  files <- list.files(path, pattern = "\\.tif$", full.names = TRUE)
+  file_name <- list.files(path, pattern = "\\.tif$", full.names = FALSE)
+  selected_file <- files[id]
+  file_name <- file_name[id]
+  raster <- terra::rast(selected_file, lyrs = lyrs)
+  num_band <- nlyr(raster)
+  sample_size <- min(sample_size, terra::ncell(raster))
+  sampled <- terra::spatSample(
+    x = raster,
+    size = sample_size,
+    method = "random",
+    replace = FALSE,
+    na.rm = TRUE,
+    values = TRUE,
+    as.df = TRUE,
+    warn = FALSE
+  )
+  sampled$R <- sampled[, names(sampled)[red]]
+  sampled$B <- sampled[, names(sampled)[green]]
+  sampled$G <- sampled[, names(sampled)[blue]]
+  sampled$NIR <- sampled[, names(sampled)[nir]]
+  sampled$RedEdge <- sampled[, names(sampled)[rededge]]
+  values <- sampled |>
+    dplyr::mutate(`:=`(index, !!rlang::parse_expr(equation$eq))) |>
+    dplyr::pull(index)
+  values <- values[is.finite(values)]
+  otsu <- otsu_threshold(values)
+  return(list(values = values, otsu = otsu, index = index, name = file_name))
 }

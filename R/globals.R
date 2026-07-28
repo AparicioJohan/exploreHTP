@@ -27,6 +27,7 @@ utils::globalVariables(
     "offset",
     "DSM_adj",
     "dsm_mean",
-    "dsm_soil_mean"
+    "dsm_soil_mean",
+    ":="
   )
 )

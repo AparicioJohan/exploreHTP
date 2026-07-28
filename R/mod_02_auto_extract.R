@@ -83,7 +83,14 @@ mod_02_auto_extract_ui <- function(id) {
               ),
               textInput(
                 inputId = ns("thrsh"),
-                label = "Threshold:",
+                label = tagList(
+                  "Threshold:",
+                  actionLink(
+                    inputId = ns("explore_thr"),
+                    icon = icon("eye"),
+                    label = "Explore"
+                  )
+                ),
                 value = 0,
                 width = "90%"
               ),
@@ -281,7 +288,7 @@ mod_02_auto_extract_ui <- function(id) {
                   selected = c("GLI", "NGRDI", "BGI"),
                   multiple = TRUE,
                   width = "90%",
-                  options = list(dropdownParent = 'body')
+                  options = list(dropdownParent = "body")
                 )
               )
             ),
@@ -295,7 +302,7 @@ mod_02_auto_extract_ui <- function(id) {
                   choices = NULL,
                   multiple = FALSE,
                   width = "90%",
-                  options = list(dropdownParent = 'body')
+                  options = list(dropdownParent = "body")
                 )
               ),
               tags$div(
@@ -445,6 +452,7 @@ mod_02_auto_extract_server <- function(id) {
     path_dsm <- reactiveVal()
     path_out <- reactiveVal()
     results <- reactiveVal()
+    total_rgb <- reactiveVal()
 
     # Table of indices
     output$table_indices <- renderDT({
@@ -476,10 +484,13 @@ mod_02_auto_extract_server <- function(id) {
         need(dir.exists(rgb_dir), "Selected RGB directory does not exist.")
       )
       imgs <- list.files(path = rgb_dir, pattern = "\\.tif$", full.names = FALSE)
+      total_rgb({
+        imgs
+      })
       validate(
         need(
           expr = length(imgs) > 0,
-          message =  "No .tif files were found in the selected RGB directory."
+          message = "No .tif files were found in the selected RGB directory."
         )
       )
       dt <- data.frame(Id = 1:length(imgs), Image = imgs)
@@ -499,6 +510,113 @@ mod_02_auto_extract_server <- function(id) {
         DTOutput(ns("table_img_names"))
       ))
     })
+
+    # Open threshold explorer
+    observeEvent(input$explore_thr, {
+      req(path_rgb())
+      req(total_rgb())
+      rgb_dir <- path_rgb()
+      choices <- 1:length(total_rgb())
+      showModal(modalDialog(
+        size = "l",
+        easyClose = TRUE,
+        footer = NULL,
+        title = "Explore Threshold",
+        fluidRow(
+          column(
+            width = 7,
+            selectInput(
+              inputId = ns("hist_image"),
+              label = "Select image:",
+              choices = choices,
+              selected = 1,
+              multiple = FALSE,
+              width = "100%"
+            )
+          ),
+          column(
+            width = 5,
+            numericInput(
+              inputId = ns("hist_sample_size"),
+              label = "Sample size:",
+              value = 150,
+              min = 10,
+              step = 100,
+              width = "100%"
+            )
+          )
+        ),
+        actionButton(
+          inputId = ns("calculate_histogram"),
+          label = "Calculate histogram",
+          icon = icon("chart-column"),
+          class = "btn-primary"
+        ),
+        plotOutput(outputId = ns("hist_plot"))
+      ))
+    })
+
+    # Execution of hist
+    hist_result <- eventReactive(
+      input$calculate_histogram,
+      {
+        req(path_rgb())
+        req(input$hist_image)
+        req(input$hist_sample_size)
+        path <- if (length(path_rgb()) == 0) NULL else path_rgb()
+        bands <- list_bands(input$rgb_bands)
+        red <- bands$red
+        green <- bands$green
+        blue <- bands$blue
+        rededge <- bands$rededge
+        nir <- bands$nir
+        withProgress(
+          message = "Sampling TIFF image...",
+          value = 0,
+          {
+            incProgress(0.3, detail = "Calculating index")
+            result <- extract_sample(
+              path = path,
+              id = as.numeric(input$hist_image),
+              index = input$seg_index,
+              n = input$hist_sample_size,
+              red = red,
+              green = green,
+              blue = blue,
+              rededge = rededge,
+              nir = nir
+            )
+            incProgress(1, detail = "Complete")
+            result
+          }
+        )
+      },
+      ignoreInit = TRUE
+    )
+
+    # Histogram
+    output$hist_plot <- renderPlot({
+      result <- hist_result()
+      req(result)
+      hist(
+        result$values,
+        breaks = 100,
+        main = result$index,
+        sub = result$name,
+        xlab = "Pixel value",
+        ylab = "Frequency"
+      )
+      abline(v = result$otsu, lwd = 2, lty = 2)
+      legend(
+        "topright",
+        legend = sprintf("Otsu threshold = %.4f", result$otsu),
+        lwd = 2,
+        lty = 2,
+        bty = "n",
+        col = "blue"
+      )
+    })
+
 
     # Area of Interest
     area_of_interest <- reactive({
@@ -580,6 +698,9 @@ mod_02_auto_extract_server <- function(id) {
           need(dir.exists(rgb_dir), "Selected RGB directory does not exist.")
         )
         imgs <- list.files(path = rgb_dir, pattern = "\\.tif$", full.names = TRUE)
+        total_rgb({
+          imgs
+        })
         validate(
           need(length(imgs) > 0, "No .tif files were found in the selected RGB directory.")
         )
