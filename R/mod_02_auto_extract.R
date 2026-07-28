@@ -281,11 +281,13 @@ mod_02_auto_extract_ui <- function(id) {
               width = 4,
               tags$div(
                 id = ns("guide_plot_id"),
-                selectInput(
+                selectizeInput(
                   inputId = ns("plot_id"),
                   label = "Select Plot ID:",
                   choices = NULL,
-                  width = "90%"
+                  multiple = FALSE,
+                  width = "90%",
+                  options = list(dropdownParent = 'body')
                 )
               ),
               tags$div(
