@@ -152,7 +152,15 @@ mod_02_auto_extract_ui <- function(id) {
                 tags$div(
                   id = ns("guide_subset_img"),
                   shinyWidgets::dropdownButton(
-                    tags$strong("Subset Images"),
+                    div(
+                      style = "display: flex; align-items: center;gap: 8px;",
+                      tags$strong("Subset Images"),
+                      actionLink(
+                        inputId = ns("view_names_img"),
+                        icon = icon("eye"),
+                        label = "View"
+                      )
+                    ),
                     circle = FALSE,
                     label = "Subset",
                     icon = icon("filter"),
@@ -456,6 +464,39 @@ mod_02_auto_extract_server <- function(id) {
         easyClose = TRUE,
         footer = NULL,
         DTOutput(ns("table_indices"))
+      ))
+    })
+
+    # View image names
+    output$table_img_names <- renderDT({
+      req(path_rgb())
+      rgb_dir <- path_rgb()
+      validate(
+        need(length(rgb_dir) == 1, "RGB directory was not selected correctly."),
+        need(dir.exists(rgb_dir), "Selected RGB directory does not exist.")
+      )
+      imgs <- list.files(path = rgb_dir, pattern = "\\.tif$", full.names = FALSE)
+      validate(
+        need(
+          expr = length(imgs) > 0,
+          message =  "No .tif files were found in the selected RGB directory."
+        )
+      )
+      dt <- data.frame(Id = 1:length(imgs), Image = imgs)
+      datatable(
+        data = dt,
+        options = list(pageLength = 5, autoWidth = FALSE),
+        filter = "top"
+      )
+    })
+
+    observeEvent(input$view_names_img, {
+      showModal(modalDialog(
+        title = tagList(icon = icon("table-cells"), "View names"),
+        size = "l",
+        easyClose = TRUE,
+        footer = NULL,
+        DTOutput(ns("table_img_names"))
       ))
     })
 
