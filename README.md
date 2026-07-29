@@ -36,7 +36,7 @@ install `{exploreHTP}`, and launch the application for the first time.
 <a href="https://www.youtube.com/watch?v=KU7hV4GcXZk"> <img
     src="https://img.youtube.com/vi/KU7hV4GcXZk/hqdefault.jpg"
     alt="Installing exploreHTP for UAV imagery analysis"
-    width="600"
+    width="200"
   /> </a>
 
 [Watch the installation tutorial on
@@ -88,5 +88,5 @@ This README was compiled on:
 
 ``` r
 Sys.time()
-#> [1] "2026-07-29 14:46:24 CDT"
+#> [1] "2026-07-29 14:49:12 CDT"
 ```

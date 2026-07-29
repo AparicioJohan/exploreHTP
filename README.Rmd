@@ -44,7 +44,7 @@ The following tutorial shows how to find the official repository, install `{expl
   <img
     src="https://img.youtube.com/vi/KU7hV4GcXZk/hqdefault.jpg"
     alt="Installing exploreHTP for UAV imagery analysis"
-    width="600"
+    width="200"
   />
 </a>
 
