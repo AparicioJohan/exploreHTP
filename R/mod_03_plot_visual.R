@@ -147,8 +147,26 @@ mod_03_plot_visual_server <- function(id, dark_mode) {
     path_plot <- reactiveVal()
 
     # Enable directory selection
-    roots <- getVolumes()()
-    shinyDirChoose(input, "directory_plots", roots = roots, session = session)
+    # roots <- getVolumes()()
+    # shinyDirChoose(input, "directory_plots", roots = roots, session = session)
+
+    home_path <- normalizePath(
+      path.expand("~"),
+      winslash = "/",
+      mustWork = TRUE
+    )
+    roots <- c(
+      Home = home_path,
+      shinyFiles::getVolumes()()
+    )
+    shinyDirChoose(
+      input = input,
+      id = "directory_plots",
+      session = session,
+      roots = roots,
+      defaultRoot = "Home",
+      defaultPath = ""
+    )
 
     # Path Plots
     observeEvent(input$directory_plots,

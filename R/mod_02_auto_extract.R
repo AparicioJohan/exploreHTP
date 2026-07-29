@@ -664,10 +664,44 @@ mod_02_auto_extract_server <- function(id) {
     })
 
     # Enable directory selection
-    roots <- getVolumes()()
-    shinyDirChoose(input, "directory_rgb", roots = roots, session = session)
-    shinyDirChoose(input, "directory_dsm", roots = roots, session = session)
-    shinyDirChoose(input, "directory_out", roots = roots, session = session)
+    # roots <- getVolumes()()
+    # shinyDirChoose(input, "directory_rgb", roots = roots, session = session)
+    # shinyDirChoose(input, "directory_dsm", roots = roots, session = session)
+    # shinyDirChoose(input, "directory_out", roots = roots, session = session)
+
+    home_path <- normalizePath(
+      path.expand("~"),
+      winslash = "/",
+      mustWork = TRUE
+    )
+    roots <- c(
+      Home = home_path,
+      shinyFiles::getVolumes()()
+    )
+    shinyDirChoose(
+      input = input,
+      id = "directory_rgb",
+      session = session,
+      roots = roots,
+      defaultRoot = "Home",
+      defaultPath = ""
+    )
+    shinyDirChoose(
+      input = input,
+      id = "directory_dsm",
+      session = session,
+      roots = roots,
+      defaultRoot = "Home",
+      defaultPath = ""
+    )
+    shinyDirChoose(
+      input = input,
+      id = "directory_out",
+      session = session,
+      roots = roots,
+      defaultRoot = "Home",
+      defaultPath = ""
+    )
 
     # Path RGB
     observeEvent(input$directory_rgb,

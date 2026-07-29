@@ -1212,8 +1212,26 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
     )
 
     # Download Images
-    roots <- getVolumes()()
-    shinyDirChoose(input, "directory_img", roots = roots, session = session)
+    # roots <- getVolumes()()
+    # shinyDirChoose(input, "directory_img", roots = roots, session = session)
+
+    home_path <- normalizePath(
+      path.expand("~"),
+      winslash = "/",
+      mustWork = TRUE
+    )
+    roots <- c(
+      Home = home_path,
+      shinyFiles::getVolumes()()
+    )
+    shinyDirChoose(
+      input = input,
+      id = "directory_img",
+      session = session,
+      roots = roots,
+      defaultRoot = "Home",
+      defaultPath = ""
+    )
 
     observeEvent(input$directory_img,
       {
