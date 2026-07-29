@@ -119,12 +119,8 @@ mod_99_about_ui <- function(id) {
       card_body(
         class = "p-4",
         div(
-          class = "d-flex align-items-center gap-2 mb-3",
-          div(class = "icon-badge icon-orange flex-shrink-0", icon("user")),
-          h6("Author", class = "fw-bold mb-0")
-        ),
-        div(
           h6("Johan Steven Aparicio", class = "fw-bold mb-1"),
+          br(),
           div(
             class = "d-flex gap-2 flex-wrap",
             tags$a(
