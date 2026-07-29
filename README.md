@@ -33,12 +33,6 @@ and use of `{exploreHTP}`.
 The following tutorial shows how to find the official repository,
 install `{exploreHTP}`, and launch the application for the first time.
 
-<a href="https://www.youtube.com/watch?v=KU7hV4GcXZk"> <img
-    src="https://img.youtube.com/vi/KU7hV4GcXZk/hqdefault.jpg"
-    alt="Installing exploreHTP for UAV imagery analysis"
-    width="200"
-  /> </a>
-
 [Watch the installation tutorial on
 YouTube](https://www.youtube.com/watch?v=KU7hV4GcXZk)
 
@@ -88,5 +82,5 @@ This README was compiled on:
 
 ``` r
 Sys.time()
-#> [1] "2026-07-29 14:49:12 CDT"
+#> [1] "2026-07-29 14:51:55 CDT"
 ```
