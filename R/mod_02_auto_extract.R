@@ -994,6 +994,7 @@ mod_02_auto_extract_server <- function(id) {
       dt <- dplyr::mutate_if(results()$dt, is.numeric, round, 3)
       datatable(
         data = dt,
+        rownames = FALSE,
         options = list(pageLength = 5, autoWidth = TRUE),
         filter = "top"
       )
