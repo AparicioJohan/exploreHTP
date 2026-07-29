@@ -14,9 +14,6 @@ mod_03_plot_visual_ui <- function(id) {
       sidebar = sidebar(
         open = "desktop",
         title = NULL,
-        helpText(
-          "This panel is going to help you to visualize plot information."
-        ),
         shinyWidgets::materialSwitch(
           inputId = ns("remove_border"),
           label = "Remove Bg",
@@ -64,70 +61,75 @@ mod_03_plot_visual_ui <- function(id) {
             )
           )
         ),
-        column(
-          width = 4,
-          fileInput(
-            inputId = ns("plot_shape"),
-            label = "Output Shapefile (.gpkg)",
-            accept = c(".gpkg"),
-            width = "90%"
-          ),
-          selectInput(
-            inputId = ns("plot_id"),
-            label = "ID Column:",
-            choices = NULL,
-            width = "90%"
-          ),
-          selectizeInput(
-            inputId = ns("uid"),
-            label = "Select ID:",
-            choices = NULL,
-            width = "90%"
+        card(
+          fluidRow(
+            column(
+              width = 4,
+              fileInput(
+                inputId = ns("plot_shape"),
+                label = "Output Shapefile (.gpkg)",
+                accept = c(".gpkg"),
+                width = "90%"
+              ),
+              selectizeInput(
+                inputId = ns("plot_id"),
+                label = "ID Column:",
+                choices = NULL,
+                width = "90%",
+                options = list(dropdownParent = "body")
+              ),
+              selectizeInput(
+                inputId = ns("uid"),
+                label = "Select ID:",
+                choices = NULL,
+                width = "90%",
+                options = list(dropdownParent = "body")
+              )
+            ),
+            column(
+              width = 4,
+              br(),
+              shinyDirButton(
+                id = ns("directory_plots"),
+                label = "Select Plot Directory",
+                title = "Choose any folder",
+                icon = icon("magnifying-glass"),
+                style = "width: 90%"
+              ),
+              textOutput(ns("dirPathPlot")),
+              br(),
+              numericInput(
+                inputId = ns("base_size"),
+                label = "Base Size",
+                min = 1,
+                max = 30,
+                value = 18,
+                step = 1,
+                width = "90%"
+              )
+            ),
+            column(
+              width = 4,
+              numericInput(
+                inputId = ns("angle"),
+                label = "Rotation Angle (degrees)",
+                min = -180,
+                max = 180,
+                value = NA,
+                step = 0.5,
+                width = "90%"
+              ),
+              checkboxInput(
+                inputId = ns("apply_angle"),
+                label = "Apply Angle?",
+                value = FALSE
+              ),
+              actionButton(ns("submit"), "Submit", icon = icon("thumbs-up")),
+              downloadButton(outputId = ns("download"), label = "Download")
+            )
           )
         ),
-        column(
-          width = 4,
-          br(),
-          shinyDirButton(
-            id = ns("directory_plots"),
-            label = "Select Plot Directory",
-            title = "Choose any folder",
-            icon = icon("magnifying-glass"),
-            style = "width: 90%"
-          ),
-          textOutput(ns("dirPathPlot")),
-          br(),
-          numericInput(
-            inputId = ns("base_size"),
-            label = "Base Size",
-            min = 1,
-            max = 30,
-            value = 18,
-            step = 1,
-            width = "90%"
-          )
-        ),
-        column(
-          width = 4,
-          numericInput(
-            inputId = ns("angle"),
-            label = "Rotation Angle (degrees)",
-            min = -180,
-            max = 180,
-            value = NA,
-            step = 0.5,
-            width = "90%"
-          ),
-          checkboxInput(
-            inputId = ns("apply_angle"),
-            label = "Apply Angle?",
-            value = FALSE
-          ),
-          actionButton(ns("submit"), "Submit", icon = icon("thumbs-up")),
-          downloadButton(outputId = ns("download"), label = "Download")
-        ),
-        column(width = 6, br(), plotOutput(ns("plot_time"))),
-        column(width = 6, br(), DTOutput(ns("data_table")))
+        uiOutput(ns("ui_box"))
       )
     )
   )
@@ -324,8 +326,22 @@ mod_03_plot_visual_server <- function(id, dark_mode) {
         dplyr::mutate_if(is.numeric, round, 3)
       datatable(
         data = dt,
+        rownames = FALSE,
         options = list(pageLength = 5, autoWidth = TRUE),
-        filter = "top"
+        filter = list(position = "top", clear = FALSE),
+        class = "compact stripe hover"
+      )
+    })
+
+    # UI
+    output$ui_box <- renderUI({
+      req(gg_objt())
+      req(dt_table())
+      card(
+        fluidRow(
+          column(width = 7, plotOutput(ns("plot_time"))),
+          column(width = 5, DTOutput(ns("data_table")))
+        )
       )
     })
 
