@@ -267,7 +267,7 @@ mod_02_auto_extract_ui <- function(id) {
                 id = ns("guide_rgb_bands"),
                 textInput(
                   inputId = ns("rgb_bands"),
-                  label = "RGB/RedEdge/NIR:",
+                  label = "R/G/B/RedEdge/NIR:",
                   value = "1, 2, 3",
                   width = "90%"
                 )
