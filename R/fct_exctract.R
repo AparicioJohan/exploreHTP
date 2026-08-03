@@ -1064,6 +1064,7 @@ extract_sample <- function(path,
   sampled$NIR1 <- sampled[, names(sampled)[nir]]
   sampled$RE <- sampled[, names(sampled)[rededge]]
   values <- sampled |>
+    dplyr::select(dplyr::all_of(c("R", "G", "B", "NIR1", "RE"))) |>
     dplyr::mutate(`:=`(index, !!rlang::parse_expr(equation$eq))) |>
     dplyr::pull(index)
   values <- values[is.finite(values)]
