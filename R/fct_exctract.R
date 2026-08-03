@@ -1061,8 +1061,8 @@ extract_sample <- function(path,
   sampled$R <- sampled[, names(sampled)[red]]
   sampled$B <- sampled[, names(sampled)[green]]
   sampled$G <- sampled[, names(sampled)[blue]]
-  sampled$NIR <- sampled[, names(sampled)[nir]]
-  sampled$RedEdge <- sampled[, names(sampled)[rededge]]
+  sampled$NIR1 <- sampled[, names(sampled)[nir]]
+  sampled$RE <- sampled[, names(sampled)[rededge]]
   values <- sampled |>
     dplyr::mutate(`:=`(index, !!rlang::parse_expr(equation$eq))) |>
     dplyr::pull(index)
