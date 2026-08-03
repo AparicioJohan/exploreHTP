@@ -271,7 +271,7 @@ mod_04_flexfitr_ui <- function(id) {
             )
           )
         ),
-        column(width = 12, br(), uiOutput(ns("ui_plot")))
+        uiOutput(ns("ui_plot"))
       )
     )
   )
@@ -394,16 +394,22 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
           placeholder = "e.g. k = max(y); m = 2",
           width = "100%"
         ),
-        textInput(
+        textAreaInput(
           inputId = ns("lower_limit"),
-          label = helpText("Lower Limit (Optional):"),
-          value = "+Inf",
+          label = tooltip(
+            trigger = list(helpText("Lower Limit (Optional):"), icon("circle-question")),
+            "e.g. a = -Inf; b = 0; c = -Inf"
+          ),
+          value = paste("-Inf", collapse = "; "),
           width = "100%"
         ),
-        textInput(
+        textAreaInput(
           inputId = ns("upper_limit"),
-          label = helpText("Upper Limit (Optional):"),
-          value = "-Inf",
+          label = tooltip(
+            trigger = list(helpText("Upper Limit (Optional):"), icon("circle-question")),
+            "e.g. a = +Inf; b = +Inf; c = 0"
+          ),
+          value = paste("+Inf", collapse = "; "),
           width = "100%"
         )
       )
@@ -718,9 +724,9 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
                   fn <- input$functions
                   parameters <- from_input_to_list(input$initial_values)
                   names(parameters) <- names(formals(fn))[-1]
-                  lower <- unlist(strsplit(input$lower_limit, ",\\s*"))
+                  lower <- from_input_to_list(input$lower_limit)
                   lower <- as.numeric(lower)
-                  upper <- unlist(strsplit(input$upper_limit, ",\\s*"))
+                  upper <- from_input_to_list(input$upper_limit)
                   upper <- as.numeric(upper)
                   fixed_params <- from_input_to_list(input$fixed_values)
                   method <- input$methods
@@ -1026,6 +1032,9 @@ mod_04_flexfitr_server <- function(id, dark_mode) {
       limit_sup <- max(output_model()$dt$x, na.rm = TRUE)
       layout_column_wrap(
         width = 1 / 2,
+        class = "w-100",
+        fill = FALSE,
+        heights_equal = "row",
         card(
           full_screen = TRUE,
           card_header(tagList(icon = icon("chart-line"), "Time Serie")),
