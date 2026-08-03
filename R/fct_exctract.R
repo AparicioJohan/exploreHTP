@@ -119,7 +119,7 @@ auto_extract <- function(path_rgb = NULL,
     msg <- sprintf(" (%d/%d)", i, total_imgs)
     cli_progress_update()
     # Reading raster
-    t1 <- read_rast(path_rgb[i], area_of_interest, lyrs)
+    t1 <- read_rast(path_rgb[i], area_of_interest, 1:length(lyrs))
     # Detecting soil
     cli_alert_info("Removing soil")
     if (is.null(threshold)) {
@@ -1045,7 +1045,7 @@ extract_sample <- function(path,
   file_name <- list.files(path, pattern = "\\.tif$", full.names = FALSE)
   selected_file <- files[id]
   file_name <- file_name[id]
-  raster <- terra::rast(selected_file, lyrs = lyrs)
+  raster <- terra::rast(selected_file, lyrs = 1:length(lyrs))
   num_band <- nlyr(raster)
   sample_size <- min(sample_size, terra::ncell(raster))
   sampled <- terra::spatSample(
