@@ -25,18 +25,27 @@ pak::pkg_install("AparicioJohan/exploreHTP")
 
 ## Video tutorials
 
-Video tutorials are available to guide users through the installation
-and use of `{exploreHTP}`.
+Step-by-step video tutorials are available on the [UW Potato Breeding
+YouTube channel](https://www.youtube.com/@uwpotatobreeding).
 
-### Installing exploreHTP for UAV imagery analysis
+### Image Analysis playlist
 
-The following tutorial shows how to find the official repository,
-install `{exploreHTP}`, and launch the application for the first time.
+Watch the complete tutorial series in the [Image Analysis
+playlist](https://www.youtube.com/playlist?list=PLChsbIypeuDs).
 
-[Watch the installation tutorial on
-YouTube](https://www.youtube.com/watch?v=KU7hV4GcXZk)
+### Available tutorials
 
-Additional tutorials will be added as they become available.
+1.  [Installing exploreHTP for UAV imagery
+    analysis](https://www.youtube.com/watch?v=KU7hV4GcXZk)
+
+2.  [Extracting ground cover and plant height with
+    exploreHTP](https://www.youtube.com/watch?v=wWabJ8CgbEE)
+
+3.  [Estimating emergence time and time to canopy
+    closure](https://www.youtube.com/watch?v=1i4QlEcoRcY)
+
+Additional tutorials will be added to the playlist as they become
+available.
 
 ## Run
 
@@ -82,5 +91,5 @@ This README was compiled on:
 
 ``` r
 Sys.time()
-#> [1] "2026-07-29 14:51:55 CDT"
+#> [1] "2026-08-03 10:32:43 CDT"
 ```
