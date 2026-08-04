@@ -41,23 +41,12 @@ mod_02_auto_extract_ui <- function(id) {
             status = "primary",
             right = TRUE
           ),
-          shinyWidgets::materialSwitch(
-            inputId = ns("time_serie"),
-            label = "Save Time Series",
-            value = FALSE,
-            status = "primary",
-            right = TRUE
-          ),
-          conditionalPanel(
-            ns = ns,
-            condition = "input.time_serie == true",
-            textInput(
-              inputId = ns("angle"),
-              label = "Angle:",
-              value = "auto",
-              width = "90%",
-              placeholder = "auto"
-            ),
+          textInput(
+            inputId = ns("angle"),
+            label = "Angle:",
+            value = "auto",
+            width = "90%",
+            placeholder = "auto"
           )
         ),
         accordion(
@@ -93,6 +82,18 @@ mod_02_auto_extract_ui <- function(id) {
                 ),
                 value = 0,
                 width = "90%"
+              ),
+              checkboxInput(
+                inputId = ns("save_binary"),
+                label = "Save Binary Plots",
+                value = FALSE,
+                width = "100%"
+              ),
+              checkboxInput(
+                inputId = ns("save_segment"),
+                label = "Save Seg. Index",
+                value = FALSE,
+                width = "100%"
               ),
               selectInput(
                 inputId = ns("no_mask_index"),
@@ -838,6 +839,9 @@ mod_02_auto_extract_server <- function(id) {
         plot_id <- input$plot_id
         save_plots <- input$save_plots
         save_masked_plots <- input$save_masked_plots
+        save_binary <- input$save_binary
+        save_segment <- input$save_segment
+        fig_serie <- c(save_plots, save_masked_plots, save_binary, save_segment)
         time_serie <- input$time_serie
         trial_name <- input$trial_name
         subset <- as.numeric(input$subset_img)
@@ -884,7 +888,9 @@ mod_02_auto_extract_server <- function(id) {
                       plot_id = plot_id,
                       save_plots = save_plots,
                       save_masked_plots = save_masked_plots,
-                      time_serie = time_serie,
+                      save_binary = save_binary,
+                      save_segment = save_segment,
+                      time_serie = any(fig_serie),
                       trial_name = trial_name,
                       path_out = path_out,
                       subset = subset,

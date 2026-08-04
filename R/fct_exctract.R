@@ -15,6 +15,8 @@
 #' @param plot_id Character (optional). Column name in `plot_shape` representing unique plot identifiers.
 #' @param save_plots Logical. If `TRUE`, saves individual plot-level images for each date. Default is `FALSE`.
 #' @param save_masked_plots Logical. If `TRUE`, saves soil-masked plot-level images for each date. Default is `FALSE`.
+#' @param save_binary Logical. If `TRUE`, saves binary mask plot-level images for each date. Default is `FALSE`.
+#' @param save_segment Logical. If `TRUE`, saves segmentation index plot-level images for each date. Default is `FALSE`.
 #' @param time_serie Logical. If `TRUE`, generates time-series plots. Default is `FALSE`.
 #' @param trial_name Character. Name of the trial for naming output files. Default is `"HARS22_chips"`.
 #' @param path_out Character. Directory path where output files will be saved.
@@ -68,6 +70,8 @@ auto_extract <- function(path_rgb = NULL,
                          plot_id = NULL,
                          save_plots = FALSE,
                          save_masked_plots = FALSE,
+                         save_binary = FALSE,
+                         save_segment = FALSE,
                          time_serie = FALSE,
                          trial_name = "test",
                          path_out = NULL,
@@ -150,6 +154,18 @@ auto_extract <- function(path_rgb = NULL,
       path <- paste0(path_out, "/", trial_name, "/plot_mask/", time[i], "/")
       create_folder_if_not_exists(path)
       crop_grid(t1_ns$new, plot_shape_crop, plot_id = plot_id, out_dir = path)
+    }
+    # Save individual binary
+    if (save_binary) {
+      path <- paste0(path_out, "/", trial_name, "/plot_binary/", time[i], "/")
+      create_folder_if_not_exists(path)
+      crop_grid(t1_ns$mask, plot_shape_crop, plot_id = plot_id, out_dir = path)
+    }
+    # Save segmentation index
+    if (save_segment) {
+      path <- paste0(path_out, "/", trial_name, "/plot_segment/", time[i], "/")
+      create_folder_if_not_exists(path)
+      crop_grid(t1_ns$index, plot_shape_crop, plot_id = plot_id, out_dir = path)
     }
     # Calculating Indices
     cli_alert_info("Calculating indices")
@@ -313,7 +329,9 @@ auto_extract <- function(path_rgb = NULL,
       angle = angle_grid,
       base_size = 14,
       save_plots = save_plots,
-      save_masked_plots = save_masked_plots
+      save_masked_plots = save_masked_plots,
+      save_binary = save_binary,
+      save_segment = save_segment
     )
     cli_alert_success("Time series plots saved successfully.")
   }
@@ -475,7 +493,7 @@ plot_organizer <- function(id,
       full.names = TRUE
     )
     mosaic <- terra::rast(path_tmp)
-    names(mosaic)[1:3] <- c("Red", "Green", "Blue")
+    nmb_ly <- terra::nlyr(mosaic)
     grid_shape <- path_shape |>
       st_read(layer = paste(i), quiet = TRUE) |>
       filter(.data[[plot_id]] %in% id) |>
@@ -494,47 +512,73 @@ plot_organizer <- function(id,
       grid_shape <- st_transform(grid_shape, crs = st_crs(mosaic))
     }
     p <- paste0(i)
-    df[[p]] <- mosaic |>
-      as.data.frame(xy = TRUE) |>
-      dplyr::select(x, y, Red, Green, Blue) |>
-      dplyr::mutate(Time = i, Plot = id)
+    if (nmb_ly == 1) {
+      df[[p]] <- mosaic |>
+        as.data.frame(xy = TRUE) |>
+        dplyr::mutate(Time = i, Plot = id)
+    } else {
+      names(mosaic)[1:3] <- c("Red", "Green", "Blue")
+      df[[p]] <- mosaic |>
+        as.data.frame(xy = TRUE) |>
+        dplyr::select(x, y, Red, Green, Blue) |>
+        dplyr::mutate(Time = i, Plot = id)
+    }
     info[[p]] <- grid_shape
   }
   info <- sf::st_as_sf(dplyr::bind_rows(info))
-  df <- do.call(what = rbind, args = df) |>
-    dplyr::filter(Red >= 0 & Blue >= 0 & Green >= 0) |>
-    dplyr::select(x, y, Red:Blue, Time, Plot) |>
-    na.omit()
-  df <- df |>
-    dplyr::mutate(
-      Red = pmin(pmax(Red, 0), 255),
-      Green = pmin(pmax(Green, 0), 255),
-      Blue = pmin(pmax(Blue, 0), 255),
-      RGB = rgb(
-        red = Red,
-        green = Green,
-        blue = Blue,
-        maxColorValue = 255
+  if (nmb_ly == 1) {
+    df <- do.call(what = rbind, args = df) |>
+      na.omit()
+    label <- names(mosaic)[1]
+    p0 <- df |>
+      ggplot() +
+      geom_raster(
+        mapping = aes(x = x, y = y, fill = .data[[label]]),
+        show.legend = TRUE
+      ) +
+      scale_fill_viridis_c() +
+      geom_sf(data = info, color = color_grid, fill = NA) +
+      theme_void(base_size = base_size) +
+      facet_wrap(Plot ~ Time, nrow = 1, labeller = label_both) +
+      theme(strip.text = element_text(colour = color)) +
+      theme(legend.position = "bottom") +
+      labs(fill = NULL)
+  } else {
+    df <- do.call(what = rbind, args = df) |>
+      dplyr::filter(Red >= 0 & Blue >= 0 & Green >= 0) |>
+      dplyr::select(x, y, Red:Blue, Time, Plot) |>
+      na.omit()
+    df <- df |>
+      dplyr::mutate(
+        Red = pmin(pmax(Red, 0), 255),
+        Green = pmin(pmax(Green, 0), 255),
+        Blue = pmin(pmax(Blue, 0), 255),
+        RGB = rgb(
+          red = Red,
+          green = Green,
+          blue = Blue,
+          maxColorValue = 255
+        )
       )
-    )
-  if (remove_border) {
-    df <- dplyr::filter(df, RGB != "#000000")
+    if (remove_border) {
+      df <- dplyr::filter(df, RGB != "#000000")
+    }
+    p0 <- df |>
+      ggplot() +
+      geom_raster(
+        mapping = aes(
+          x = x,
+          y = y,
+          fill = rgb(red = Red, green = Green, blue = Blue, maxColorValue = 255)
+        ),
+        show.legend = FALSE
+      ) +
+      scale_fill_identity() +
+      geom_sf(data = info, color = color_grid, fill = NA) +
+      theme_void(base_size = base_size) +
+      facet_wrap(Plot ~ Time, nrow = 1, labeller = label_both) +
+      theme(strip.text = element_text(colour = color))
   }
-  p0 <- df |>
-    ggplot() +
-    geom_raster(
-      mapping = aes(
-        x = x,
-        y = y,
-        fill = rgb(red = Red, green = Green, blue = Blue, maxColorValue = 255)
-      ),
-      show.legend = FALSE
-    ) +
-    scale_fill_identity() +
-    geom_sf(data = info, color = color_grid, fill = NA) +
-    theme_void(base_size = base_size) +
-    facet_wrap(Plot ~ Time, nrow = 1, labeller = label_both) +
-    theme(strip.text = element_text(colour = color))
   out <- list(df = df, info = info, figure = p0)
   return(out)
 }
@@ -564,6 +608,8 @@ plot_organizer <- function(id,
 #'   (from the `plot/` directory). Default `TRUE`.
 #' @param save_masked_plots Logical. If `TRUE`, save masked time-series figures
 #'   (from the `plot_mask/` directory). Default `TRUE`.
+#' @param save_binary Logical. If `TRUE`, saves binary mask plot-level images for each date. Default is `FALSE`.
+#' @param save_segment Logical. If `TRUE`, saves segmentation index plot-level images for each date. Default is `FALSE`.
 #' @param img_width,img_height Numerics giving the intended figure width/height
 #'   in inches. Default `width = 8`, `height = 6`.
 #' @param type Character scalar. Can be "png", "jpg", or "svg". Default "png".
@@ -617,12 +663,11 @@ plot_time_series <- function(plot_shape,
                              base_size = 14,
                              save_plots = TRUE,
                              save_masked_plots = TRUE,
+                             save_binary = FALSE,
+                             save_segment = FALSE,
                              img_width = 8,
                              img_height = 6,
                              type = c("png", "jpg", "svg")) {
-  if (!save_plots && !save_masked_plots) {
-    return()
-  }
   type <- match.arg(type)
   unique_ids <- sort(unique(plot_shape[[plot_id]]))
   msgs <- "..."
@@ -635,6 +680,9 @@ plot_time_series <- function(plot_shape,
       path_out, "/", trial_name,
       "/shape_files/shape_", trial_name, ".gpkg"
     )
+    create_folder_if_not_exists(
+      path = paste0(path_out, "/", trial_name, "/plots_time/")
+    )
     if (save_plots) {
       p0 <- plot_organizer(
         id = w,
@@ -643,9 +691,6 @@ plot_time_series <- function(plot_shape,
         path_shape = path_shape,
         angle = angle,
         base_size = base_size
-      )
-      create_folder_if_not_exists(
-        path = paste0(path_out, "/", trial_name, "/plots_time/")
       )
       ggsave(
         filename = paste0(
@@ -670,6 +715,46 @@ plot_time_series <- function(plot_shape,
       ggsave(
         filename = paste0(
           path_out, "/", trial_name, "/plots_time/ID_", w, "_mask.", type
+        ),
+        plot = p1$figure,
+        units = "in",
+        dpi = 300,
+        width = img_width,
+        height = img_height
+      ) |> suppressWarnings()
+    }
+    if (save_binary) {
+      p1 <- plot_organizer(
+        id = w,
+        plot_id = plot_id,
+        path = paste0(path_out, "/", trial_name, "/plot_binary/"),
+        path_shape = path_shape,
+        angle = angle,
+        base_size = base_size
+      )
+      ggsave(
+        filename = paste0(
+          path_out, "/", trial_name, "/plots_time/ID_", w, "_binary.", type
+        ),
+        plot = p1$figure,
+        units = "in",
+        dpi = 300,
+        width = img_width,
+        height = img_height
+      ) |> suppressWarnings()
+    }
+    if (save_segment) {
+      p1 <- plot_organizer(
+        id = w,
+        plot_id = plot_id,
+        path = paste0(path_out, "/", trial_name, "/plot_segment/"),
+        path_shape = path_shape,
+        angle = angle,
+        base_size = base_size
+      )
+      ggsave(
+        filename = paste0(
+          path_out, "/", trial_name, "/plots_time/ID_", w, "_segment.", type
         ),
         plot = p1$figure,
         units = "in",
@@ -877,7 +962,7 @@ calc_mask <- function(mosaic,
     }
     mosaic <- terra::mask(mosaic, m, maskvalue = TRUE)
   }
-  out <- list(new = mosaic, mask = m)
+  out <- list(new = mosaic, mask = m, index = mr)
   return(out)
 }
 

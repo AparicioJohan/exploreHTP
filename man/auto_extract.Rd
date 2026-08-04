@@ -18,6 +18,8 @@ auto_extract(
   plot_id = NULL,
   save_plots = FALSE,
   save_masked_plots = FALSE,
+  save_binary = FALSE,
+  save_segment = FALSE,
   time_serie = FALSE,
   trial_name = "test",
   path_out = NULL,
@@ -58,6 +60,10 @@ auto_extract(
 \item{save_plots}{Logical. If `TRUE`, saves individual plot-level images for each date. Default is `FALSE`.}
 
 \item{save_masked_plots}{Logical. If `TRUE`, saves soil-masked plot-level images for each date. Default is `FALSE`.}
+
+\item{save_binary}{Logical. If `TRUE`, saves binary mask plot-level images for each date. Default is `FALSE`.}
+
+\item{save_segment}{Logical. If `TRUE`, saves segmentation index plot-level images for each date. Default is `FALSE`.}
 
 \item{time_serie}{Logical. If `TRUE`, generates time-series plots. Default is `FALSE`.}
 

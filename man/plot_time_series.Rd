@@ -13,6 +13,8 @@ plot_time_series(
   base_size = 14,
   save_plots = TRUE,
   save_masked_plots = TRUE,
+  save_binary = FALSE,
+  save_segment = FALSE,
   img_width = 8,
   img_height = 6,
   type = c("png", "jpg", "svg")
@@ -43,6 +45,10 @@ and a geopackage at
 
 \item{save_masked_plots}{Logical. If `TRUE`, save masked time-series figures
 (from the `plot_mask/` directory). Default `TRUE`.}
+
+\item{save_binary}{Logical. If `TRUE`, saves binary mask plot-level images for each date. Default is `FALSE`.}
+
+\item{save_segment}{Logical. If `TRUE`, saves segmentation index plot-level images for each date. Default is `FALSE`.}
 
 \item{img_width, img_height}{Numerics giving the intended figure width/height
 in inches. Default `width = 8`, `height = 6`.}
