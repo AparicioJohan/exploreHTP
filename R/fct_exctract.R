@@ -540,8 +540,11 @@ plot_organizer <- function(id,
       geom_sf(data = info, color = color_grid, fill = NA) +
       theme_void(base_size = base_size) +
       facet_wrap(Plot ~ Time, nrow = 1, labeller = label_both) +
-      theme(strip.text = element_text(colour = color)) +
-      theme(legend.position = "bottom") +
+      theme(
+        strip.text = element_text(colour = color),
+        legend.position = "bottom",
+        legend.text = element_text(colour = color)
+      ) +
       labs(fill = NULL)
   } else {
     df <- do.call(what = rbind, args = df) |>

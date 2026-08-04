@@ -83,17 +83,12 @@ mod_02_auto_extract_ui <- function(id) {
                 value = 0,
                 width = "90%"
               ),
-              checkboxInput(
+              shinyWidgets::materialSwitch(
                 inputId = ns("save_binary"),
                 label = "Save Binary Plots",
                 value = FALSE,
-                width = "100%"
-              ),
-              checkboxInput(
-                inputId = ns("save_segment"),
-                label = "Save Seg. Index",
-                value = FALSE,
-                width = "100%"
+                status = "primary",
+                right = TRUE
               ),
               selectInput(
                 inputId = ns("no_mask_index"),
@@ -840,7 +835,7 @@ mod_02_auto_extract_server <- function(id) {
         save_plots <- input$save_plots
         save_masked_plots <- input$save_masked_plots
         save_binary <- input$save_binary
-        save_segment <- input$save_segment
+        save_segment <- input$save_binary # On purpose
         fig_serie <- c(save_plots, save_masked_plots, save_binary, save_segment)
         time_serie <- input$time_serie
         trial_name <- input$trial_name
