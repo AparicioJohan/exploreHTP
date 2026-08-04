@@ -18,42 +18,12 @@ mod_02_auto_extract_ui <- function(id) {
       sidebar = sidebar(
         open = "desktop",
         title = NULL,
-        actionButton(
-          inputId = ns("start_autoextract_tour"),
-          label = "Guide",
-          icon = icon("route"),
-          class = "btn-outline-primary"
-        ),
-        tags$div(
-          id = ns("guide_output_options"),
-          style = "margin-top: 4px; margin-bottom: 4px;",
-          shinyWidgets::materialSwitch(
-            inputId = ns("save_plots"),
-            label = "Save Plots",
-            value = FALSE,
-            status = "primary",
-            right = TRUE
-          ),
-          shinyWidgets::materialSwitch(
-            inputId = ns("save_masked_plots"),
-            label = "Save Masked Plots",
-            value = FALSE,
-            status = "primary",
-            right = TRUE
-          ),
-          textInput(
-            inputId = ns("angle"),
-            label = "Angle:",
-            value = "auto",
-            width = "90%",
-            placeholder = "auto"
-          )
-        ),
         accordion(
-          open = TRUE,
+          open = c("number_1", "number_2"),
           accordion_panel(
-            "Settings",
-            icon = icon("cog"),
+            title = "1. Segmentation",
+            value = "number_1",
+            icon = icon("wand-magic-sparkles"),
             tags$div(
               id = ns("guide_segmentation_settings"),
               selectInput(
@@ -62,11 +32,11 @@ mod_02_auto_extract_ui <- function(id) {
                 choices = list("RGB" = rgb_list, "Multispectral" = mts_list),
                 selected = c("HUE"),
                 multiple = FALSE,
-                width = "90%"
+                width = "100%"
               ),
               checkboxInput(
                 inputId = ns("mask_above"),
-                label = "Remove above?",
+                label = "Above threshold?",
                 value = TRUE,
                 width = "100%"
               ),
@@ -77,11 +47,34 @@ mod_02_auto_extract_ui <- function(id) {
                   actionLink(
                     inputId = ns("explore_thr"),
                     icon = icon("eye"),
-                    label = "Explore"
+                    label = "Preview"
                   )
                 ),
                 value = 0,
                 width = "90%"
+              )
+            )
+          ),
+          accordion_panel(
+            title = "2. Output files",
+            icon = icon("folder-open"),
+            value = "number_2",
+            tags$div(
+              id = ns("guide_output_options"),
+              style = "margin-top: 4px; margin-bottom: 4px;",
+              shinyWidgets::materialSwitch(
+                inputId = ns("save_plots"),
+                label = "Save Plots",
+                value = FALSE,
+                status = "primary",
+                right = TRUE
+              ),
+              shinyWidgets::materialSwitch(
+                inputId = ns("save_masked_plots"),
+                label = "Save Masked Plots",
+                value = FALSE,
+                status = "primary",
+                right = TRUE
               ),
               shinyWidgets::materialSwitch(
                 inputId = ns("save_binary"),
@@ -92,29 +85,63 @@ mod_02_auto_extract_ui <- function(id) {
               ),
               selectInput(
                 inputId = ns("no_mask_index"),
-                label = "VI without mask:",
+                label = "Unmasked Index:",
                 choices = list("None", "RGB" = rgb_list, "Multispectral" = mts_list),
                 selected = c("None"),
                 multiple = FALSE,
-                width = "90%"
+                width = "100%"
               )
+            )
+          ),
+          accordion_panel(
+            title = "3. Advanced",
+            value = "number_3",
+            icon = icon("gear"),
+            open = FALSE,
+            textInput(
+              inputId = ns("angle"),
+              label = "Image Rotation",
+              value = "auto",
+              width = "100%",
+              placeholder = "auto"
             )
           )
         )
       ),
       fluidRow(
-        # Hero Banner
         div(
           class = "hero-banner rounded-4 px-4 py-3 mb-3",
+
           div(
-            class = "d-flex align-items-center gap-3",
-            div(class = "icon-badge icon-green flex-shrink-0", icon("images")),
+            class = "d-flex align-items-center justify-content-between w-100",
+
+            # Title and description
             div(
-              h4("Autoextract", class = "fw-bold mb-0"),
-              p(
-                "Extract plot-level phenotypes from RGB and multispectral UAV imagery.",
-                class = "text-muted small mb-0"
+              class = "d-flex align-items-center gap-3",
+
+              div(
+                class = "icon-badge icon-green flex-shrink-0",
+                icon("images")
+              ),
+
+              div(
+                h4("Autoextract", class = "fw-bold mb-0"),
+                p(
+                  "Extract plot-level phenotypes from RGB and multispectral UAV imagery.",
+                  class = "text-muted small mb-0"
+                )
               )
+            ),
+
+            # Guide button
+            bslib::tooltip(
+              actionButton(
+                inputId = ns("start_autoextract_tour"),
+                label = "Guide",
+                icon = icon("route"),
+                class = "btn-sm btn-outline-primary flex-shrink-0"
+              ),
+              "Start the Autoextract guided tour"
             )
           )
         ),
@@ -223,33 +250,6 @@ mod_02_auto_extract_ui <- function(id) {
                       width = "100%"
                     )
                   )
-                  # shinyWidgets::dropdownButton(
-                  #   circle = FALSE,
-                  #   label = "More",
-                  #   icon = icon("plus"),
-                  #   width = "400px",
-                  #   margin = "20px",
-                  #   up = FALSE,
-                  #   shinyDirButton(
-                  #     id = ns("directory_dsm"),
-                  #     label = "DSM Directory",
-                  #     title = "Choose any folder",
-                  #     icon = icon("magnifying-glass"),
-                  #     style = "margin-bottom: 25px;"
-                  #   ),
-                  #   fileInput(
-                  #     inputId = ns("plot_shape_crop"),
-                  #     label = helpText("Shapefile to Crop (Optional)"),
-                  #     accept = c(".gpkg"),
-                  #     width = "100%"
-                  #   ),
-                  #   fileInput(
-                  #     inputId = ns("area"),
-                  #     label = helpText("Area of Interest (Optional)"),
-                  #     accept = c(".gpkg"),
-                  #     width = "100%"
-                  #   )
-                  # )
                 )
               )
             ),
@@ -263,7 +263,14 @@ mod_02_auto_extract_ui <- function(id) {
                 id = ns("guide_rgb_bands"),
                 textInput(
                   inputId = ns("rgb_bands"),
-                  label = "R/G/B/RedEdge/NIR:",
+                  label = tagList(
+                    "R/G/B/RedEdge/NIR:",
+                    actionLink(
+                      inputId = ns("view_bands"),
+                      icon = icon("eye"),
+                      label = "Explore"
+                    )
+                  ),
                   value = "1, 2, 3",
                   width = "90%"
                 )
@@ -335,7 +342,6 @@ mod_02_auto_extract_ui <- function(id) {
                   icon = icon("play"),
                   class = "btn-primary flex-shrink-0"
                 )
-                # actionButton(ns("submit"), "Submit", icon = icon("thumbs-up"))
               ),
               uiOutput(ns("dirPathOut"))
             )
@@ -418,7 +424,8 @@ mod_02_auto_extract_server <- function(id) {
         "Use these switches to control optional outputs.",
         "Save Plots exports individual plot images.",
         "Save Masked Plots exports soil-masked plot images.",
-        "Save Time Series creates per-plot time-series figures."
+        "Save Binary Plots and segmentation index time-series figures.",
+        "Unmasked Index: calculates one index from the original image without masking."
       )
     )$
       step(
@@ -427,11 +434,9 @@ mod_02_auto_extract_server <- function(id) {
       description = paste(
         "Segmentation Index: selects the index used to separate vegetation from soil.",
         "",
-        "Remove above?: controls whether values above the threshold are masked.",
+        "Remove pixels above threshold?: controls whether values above the threshold are masked.",
         "",
         "Threshold: sets the cutoff value.",
-        "",
-        "VI without mask: calculates one index from the original image without masking.",
         sep = "<br>"
       )
     )
@@ -612,6 +617,47 @@ mod_02_auto_extract_server <- function(id) {
         col = "blue"
       )
     })
+
+
+# -------------------------------------------------------------------------
+
+    # View image names
+    output$table_bands <- renderDT({
+      req(path_rgb())
+      rgb_dir <- path_rgb()
+      validate(
+        need(length(rgb_dir) == 1, "Image directory was not selected correctly."),
+        need(dir.exists(rgb_dir), "Selected image directory does not exist.")
+      )
+      imgs <- list.files(path = rgb_dir, pattern = "\\.tif$", full.names = TRUE)
+      names_img <- list.files(path = rgb_dir, pattern = "\\.tif$", full.names = FALSE)
+      validate(
+        need(
+          expr = length(imgs) > 0,
+          message = "No .tif files were found in the selected image directory."
+        )
+      )
+      dt <- check_bands(imgs, names = names_img, session = session)
+      datatable(
+        data = dt,
+        options = list(pageLength = 5, autoWidth = FALSE),
+        filter = "top"
+      )
+    })
+
+    observeEvent(input$view_bands, {
+      showModal(modalDialog(
+        title = tagList(icon = icon("table-cells"), "View Names"),
+        size = "l",
+        easyClose = TRUE,
+        footer = NULL,
+        DTOutput(ns("table_bands"))
+      ))
+    })
+
+# -------------------------------------------------------------------------
+
+
 
 
     # Area of Interest
