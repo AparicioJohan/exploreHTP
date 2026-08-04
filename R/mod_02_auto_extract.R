@@ -662,7 +662,7 @@ mod_02_auto_extract_server <- function(id) {
 
     observeEvent(input$view_bands, {
       showModal(modalDialog(
-        title = tagList(icon = icon("table-cells"), "View Names"),
+        title = tagList(icon = icon("table-cells"), "View Layers"),
         size = "l",
         easyClose = TRUE,
         footer = NULL,
