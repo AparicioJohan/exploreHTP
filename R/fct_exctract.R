@@ -1159,3 +1159,39 @@ extract_sample <- function(path,
   otsu <- otsu_threshold(values)
   return(list(values = values, otsu = otsu, index = index, name = file_name))
 }
+
+# Print number of bands
+check_bands <- function(files, names, session = shiny::getDefaultReactiveDomain()) {
+  total_imgs <- length(files)
+  if (total_imgs == 0) {
+    return(data.frame())
+  }
+  results <- vector("list", total_imgs)
+  shiny::withProgress(
+    message = "Scanning TIFF images...",
+    value = 0,
+    session = session,
+    {
+      for (i in seq_along(files)) {
+        tmp <- terra::rast(files[[i]])
+        names_bands <- names(tmp)
+        results[[i]] <- data.frame(
+          File = names[[i]],
+          Bands = paste(names_bands, collapse = "/"),
+          nbands = length(names_bands)
+        )
+        rm(tmp)
+        shiny::setProgress(
+          value = i / total_imgs,
+          detail = sprintf(
+            "Reading file %d of %d",
+            i,
+            total_imgs
+          ),
+          session = session
+        )
+      }
+      dplyr::bind_rows(results)
+    }
+  )
+}
