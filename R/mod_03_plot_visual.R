@@ -331,7 +331,11 @@ mod_03_plot_visual_server <- function(id, dark_mode) {
       {
         req(gg_objt())
         color <- ifelse(dark_mode() == "light", "black", "white")
-        gg_objt() + theme(strip.text = element_text(colour = color))
+        gg_objt() +
+          theme(
+            strip.text = element_text(colour = color),
+            legend.text = element_text(colour = color)
+          )
       },
       bg = "transparent"
     )
