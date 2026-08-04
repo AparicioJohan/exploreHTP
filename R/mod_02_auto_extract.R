@@ -576,16 +576,31 @@ mod_02_auto_extract_server <- function(id) {
           value = 0,
           {
             incProgress(0.3, detail = "Calculating index")
-            result <- extract_sample(
-              path = path,
-              id = as.numeric(input$hist_image),
-              index = input$seg_index,
-              n = input$hist_sample_size,
-              red = red,
-              green = green,
-              blue = blue,
-              rededge = rededge,
-              nir = nir
+            result <- NULL
+            tryCatch(
+              {
+                result <- extract_sample(
+                  path = path,
+                  id = as.numeric(input$hist_image),
+                  index = input$seg_index,
+                  n = input$hist_sample_size,
+                  red = red,
+                  green = green,
+                  blue = blue,
+                  rededge = rededge,
+                  nir = nir
+                )
+              },
+              error = function(e) {
+                shinytoastr::toastr_error(
+                  title = "Check R/G/B/RedEdge/NIR:",
+                  message = conditionMessage(e),
+                  closeButton = TRUE,
+                  position = "bottom-right",
+                  showMethod = "slideDown",
+                  timeOut = 0
+                )
+              }
             )
             incProgress(1, detail = "Complete")
             result
