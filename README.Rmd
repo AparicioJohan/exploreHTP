@@ -50,6 +50,8 @@ Watch the complete tutorial series in the
 
 3. [Estimating emergence time and time to canopy closure](https://www.youtube.com/watch?v=1i4QlEcoRcY)
 
+4. [Extracting NDVI from multispectral UAV imagery with exploreHTP](https://www.youtube.com/watch?v=4R_riO_jOAA)
+
 Additional tutorials will be added to the playlist as they become available.
 
 ## Run

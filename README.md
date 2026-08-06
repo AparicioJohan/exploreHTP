@@ -44,6 +44,9 @@ playlist](https://www.youtube.com/playlist?list=PLChsbIypeuDs).
 3.  [Estimating emergence time and time to canopy
     closure](https://www.youtube.com/watch?v=1i4QlEcoRcY)
 
+4.  [Extracting NDVI from multispectral UAV imagery with
+    exploreHTP](https://www.youtube.com/watch?v=4R_riO_jOAA)
+
 Additional tutorials will be added to the playlist as they become
 available.
 
@@ -91,5 +94,5 @@ This README was compiled on:
 
 ``` r
 Sys.time()
-#> [1] "2026-08-03 10:32:43 CDT"
+#> [1] "2026-08-06 10:30:21 CDT"
 ```
