@@ -47,6 +47,9 @@ playlist](https://www.youtube.com/playlist?list=PLChsbIypeuDs).
 4.  [Extracting NDVI from multispectral UAV imagery with
     exploreHTP](https://www.youtube.com/watch?v=4R_riO_jOAA)
 
+5.  [Estimating senescence time using the GLI vegetation
+    index](https://www.youtube.com/watch?v=jbS3QU5-X9Q)
+
 Additional tutorials will be added to the playlist as they become
 available.
 
@@ -94,5 +97,5 @@ This README was compiled on:
 
 ``` r
 Sys.time()
-#> [1] "2026-08-06 10:30:21 CDT"
+#> [1] "2026-08-07 13:57:42 CDT"
 ```
